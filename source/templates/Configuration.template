@@ -242,7 +242,7 @@ Resources:
       "SolutionMetricLambda": "${SolutionMetricLambda.Arn}",
       "LdapBase": "DC=soca,dc=local",
       "LdapHost": "${SchedulerPrivateDnsName}",
-      "DefaultMetricCollection": "${DefaultMetricCollection}"
+      "DefaultMetricCollection": "${DefaultMetricCollection}",
       "RepositoryIP": "${RepositoryIP}"
       }'
 

@@ -25,7 +25,7 @@ Metadata:
         Parameters:
           - UserName
           - UserPassword
-      - Label
+      - Label:
           default: Local Repository
         Parameters:
           - RepositoryIP
