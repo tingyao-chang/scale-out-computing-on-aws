@@ -29,6 +29,13 @@ Metadata:
           default: Local Repository
         Parameters:
           - RepositoryIP
+      - Label:
+          default: VPC Peering information
+        Parameters:
+          - PeerVPCAccountId
+          - PeerVPCId
+          - PeerRoleArn
+          - PeerVPCCidr
 
     ParameterLabels:
       VpcCidr:
@@ -115,10 +122,22 @@ Parameters:
     AllowedPattern: "^[A-Za-z]+[a-zA-Z0-9@!#+_^{}\\[\\]()]*$"
     Description: "5 characters minimum. Must start with a letter. Special chars accepted: !#@+_^{}[]()"
     ConstraintDescription: "5 characters minimum. Must start with a letter. Special chars accepted: !#@+_^{}[]()"
-  
+
   RepositoryIP:
     Type: String
     Description: IP of the yum repository
+
+  PeerVPCAccountId:
+    Type: String
+  
+  PeerVPCId:
+    Type: String
+  
+  PeerRoleArn:
+    Type: String
+  
+  PeerVPCCidr:
+    Type: String
   
 Mappings:
   Send:
@@ -333,6 +352,10 @@ Resources:
         ClusterId: !GetAtt CheckSOCAPreRequisite.ClusterId
         PublicSubnetMaskBits: !GetAtt CheckSOCAPreRequisite.PublicSubnetMaskBits
         PrivateSubnetMaskBits: !GetAtt CheckSOCAPreRequisite.PrivateSubnetMaskBits
+        PeerVPCAccountId: !Ref PeerVPCAccountId
+        PeerVPCId: !Ref PeerVPCId
+        PeerRoleArn: !Ref PeerRoleArn
+        PeerVPCCidr: !Ref PeerVPCCidr
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Network.template"] ]
 
   Security:

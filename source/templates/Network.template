@@ -12,6 +12,14 @@ Parameters:
     Type: String
   PrivateSubnetMaskBits:
     Type: String
+  PeerVPCAccountId:
+    Type: String
+  PeerVPCId:
+    Type: String
+  PeerRoleArn:
+    Type: String
+  PeerVPCCidr:
+    Type: String
 
 Resources:
   Vpc:
@@ -20,7 +28,6 @@ Resources:
         rules_to_suppress:
           - id: W60
             reason: "Not enforcing VPC Flow Log. Customers are able to enable it post-launch if needed"
-
     Type: AWS::EC2::VPC
     Properties:
       EnableDnsSupport: true
@@ -31,6 +38,14 @@ Resources:
           Value: !Sub ${ClusterId}-VPC
         - Key: soca:ClusterId
           Value: !Ref ClusterId
+
+  vpcPeeringConnection:
+    Type: AWS::EC2::VPCPeeringConnection
+    Properties:
+      VpcId: !Ref Vpc
+      PeerVpcId: !Ref PeerVPCId
+      PeerOwnerId: !Ref PeerVPCAccountId
+      PeerRoleArn: !Ref PeerRoleArn
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -200,6 +215,22 @@ Resources:
       NatGatewayId: !Ref NatGateway
       RouteTableId: !Ref PrivateRouteTable
 
+  PeeringPublicRoute:
+    DependsOn: PublicRouteTable
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: !Ref PeerVPCCidr
+      VpcPeeringConnectionId: !Ref vpcPeeringConnection
+      RouteTableId: !Ref PublicRouteTable
+
+  PeeringPrivateRoute:
+    DependsOn: PrivateRouteTable
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: !Ref PeerVPCCidr
+      VpcPeeringConnectionId: !Ref vpcPeeringConnection
+      RouteTableId: !Ref PrivateRouteTable
+  
   PublicRouteSubnetAssociation1:
     DependsOn: PublicRouteTable
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -263,3 +294,5 @@ Outputs:
     Value: !Ref EIPScheduler
   SchedulerPublicIPAllocation:
     Value: !GetAtt EIPScheduler.AllocationId
+  VPCPeeringConnectionId:
+    Value: !Ref vpcPeeringConnection
