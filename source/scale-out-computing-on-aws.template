@@ -3,21 +3,18 @@ Description: (SO0072) - Scale-Out Computing on AWS. Template version 2.6.0
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      -
-        Label:
+      - Label:
             default: Install Location
         Parameters:
           - S3InstallBucket
           - S3InstallFolder
-
       - Label:
           default: Linux Distribution
         Parameters:
           - BaseOS
           - CustomAMI
           - SchedulerInstanceType
-      -
-        Label:
+      - Label:
           default: Network and Security
         Parameters:
           - VpcCidr
@@ -28,6 +25,10 @@ Metadata:
         Parameters:
           - UserName
           - UserPassword
+      - Label
+          default: Local Repository
+        Parameters:
+          - RepositoryIP
 
     ParameterLabels:
       VpcCidr:
@@ -50,6 +51,8 @@ Metadata:
         default: Username for your default LDAP user
       UserPassword:
         default: Password for your default LDAP user
+      RepositoryIP:
+        default: IP for your local repository
 
 Parameters:
   CustomAMI:
@@ -112,7 +115,11 @@ Parameters:
     AllowedPattern: "^[A-Za-z]+[a-zA-Z0-9@!#+_^{}\\[\\]()]*$"
     Description: "5 characters minimum. Must start with a letter. Special chars accepted: !#@+_^{}[]()"
     ConstraintDescription: "5 characters minimum. Must start with a letter. Special chars accepted: !#@+_^{}[]()"
-
+  
+  RepositoryIP:
+    Type: String
+    Description: IP of the yum repository
+  
 Mappings:
   Send:
     AnonymousUsage:
@@ -381,6 +388,7 @@ Resources:
         UserPassword: !Ref UserPassword
         SchedulerPublicIP: !GetAtt Network.Outputs.SchedulerPublicIP
         SchedulerPublicIPAllocation: !GetAtt Network.Outputs.SchedulerPublicIPAllocation
+        RepositoryIP: !Ref RepositoryIP
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Scheduler.template"] ]
       TimeoutInMinutes: 60
 
@@ -455,6 +463,7 @@ Resources:
         BaseOS: !Ref BaseOS
         SolutionMetricsRoleArn: !GetAtt Security.Outputs.SolutionMetricsRoleArn
         DefaultMetricCollection: !FindInMap [ Send, AnonymousUsage, Data ]
+        RepositoryIP: !Ref RepositoryIP
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Configuration.template"] ]
       TimeoutInMinutes: 60
 
@@ -477,3 +486,5 @@ Outputs:
     Value: !If [UseCustomAMI, !Ref CustomAMI, !FindInMap [RegionMap, !Ref "AWS::Region", !Ref BaseOS]]
   Version:
     Value: !FindInMap [ Info, Data, Version ]
+  RepositoryIP:
+    Value: !Ref RepositoryIP

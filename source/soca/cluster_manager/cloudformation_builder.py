@@ -67,6 +67,15 @@ def main(**params):
 export PATH=$PATH:/usr/local/bin
 if [[ "''' + params['BaseOS'] + '''" == "centos7" ]] || [[ "''' + params['BaseOS'] + '''" == "rhel7" ]];
 then
+     mv /etc/yum.repos.d/CentOS-* /tmp
+     cat << EOF > /etc/yum.repos.d/local.repo
+     [local]
+     name=local repository
+     baseurl=http:// '''+ params['RepositoryIP'] +'''
+     gpgcheck=0
+     enabled=1
+     EOF
+     
      yum install -y python3-pip
      PIP=$(which pip3)
      $PIP install awscli

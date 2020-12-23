@@ -53,7 +53,9 @@ Parameters:
   SchedulerPublicIPAllocation:
     Type: String
 
-
+  RepositoryIP:
+    Type: String
+    
 Conditions:
   UseAmazonLinux: !Equals [ !Ref BaseOS, 'amazonlinux2']
 

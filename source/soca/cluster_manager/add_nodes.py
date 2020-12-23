@@ -754,6 +754,10 @@ def main(**kwargs):
             'VolumeTypeIops': {
                 'Key': 'scratch_iops',
                 'Default': 0
+            },
+            'RepositoryIP': {
+                'Key': 'repository_ip',
+                'Default': aligo_configuration['RepositoryIP']
             }
         }
 

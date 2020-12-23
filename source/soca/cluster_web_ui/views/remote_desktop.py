@@ -277,6 +277,7 @@ def create():
     soca_private_subnets = [soca_configuration["PrivateSubnet1"],
                             soca_configuration["PrivateSubnet2"],
                             soca_configuration["PrivateSubnet3"]]
+    repository_ip = soca_configuration["RepositoryIP"]
 
     # sanitize session_name, limit to 255 chars
     if parameters["session_name"] is False:
@@ -300,12 +301,21 @@ def create():
         if not image_id.startswith("ami-"):
             flash("AMI selectioned {} does not seems to be valid. Must start with ami-<id>".format(image_id), "error")
             return redirect("/remote_desktop")
-
+    
 
     user_data = '''#!/bin/bash -x
 export PATH=$PATH:/usr/local/bin
 if [[ "''' + base_os + '''" == "centos7" ]] || [[ "''' + base_os + '''" == "rhel7" ]];
 then
+        mv /etc/yum.repos.d/CentOS-* /tmp
+        cat << EOF > /etc/yum.repos.d/local.repo
+        [local]
+        name=local repository
+        baseurl=http:// '''+ repository_ip +'''
+        gpgcheck=0
+        enabled=1
+        EOF
+        
         yum install -y python3-pip
         PIP=$(which pip3)
         $PIP install awscli

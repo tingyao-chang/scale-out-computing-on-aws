@@ -100,6 +100,9 @@ Parameters:
   DefaultMetricCollection:
     Type: String
 
+  RepositoryIP:
+    Type: String
+
 Resources:
   SolutionMetricLambda:
     Metadata:
@@ -240,6 +243,7 @@ Resources:
       "LdapBase": "DC=soca,dc=local",
       "LdapHost": "${SchedulerPrivateDnsName}",
       "DefaultMetricCollection": "${DefaultMetricCollection}"
+      "RepositoryIP": "${RepositoryIP}"
       }'
 
       Tags:
