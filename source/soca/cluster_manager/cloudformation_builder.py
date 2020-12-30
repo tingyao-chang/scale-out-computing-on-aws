@@ -61,25 +61,26 @@ def main(**params):
         ltd = LaunchTemplateData("NodeLaunchTemplateData")
         mip = MixedInstancesPolicy()
         stack_name = Ref("AWS::StackName")
-
+        
         # Begin LaunchTemplateData
         UserData = '''#!/bin/bash -x
 export PATH=$PATH:/usr/local/bin
 if [[ "''' + params['BaseOS'] + '''" == "centos7" ]] || [[ "''' + params['BaseOS'] + '''" == "rhel7" ]];
 then
      mv /etc/yum.repos.d/CentOS-* /tmp
-     cat << EOF > /etc/yum.repos.d/local.repo
-     [local]
-     name=local repository
-     baseurl=http:// '''+ params['RepositoryIP'] +'''
-     gpgcheck=0
-     enabled=1
-     EOF
-     
+     echo "[private]" >> /etc/yum.repos.d/local.repo
+     echo "name=private repository" >> /etc/yum.repos.d/local.repo
+     echo "baseurl=http://'''+ params['Repository'] +'''" >> /etc/yum.repos.d/local.repo
+     echo "gpgcheck=0" >> /etc/yum.repos.d/local.repo
+     echo "enabled=1" >> /etc/yum.repos.d/local.repo
+
      yum install -y python3-pip
      PIP=$(which pip3)
-     $PIP install awscli
+     #$PIP config --user set global.index-url http://'''+ params['Repository'] +'''/simple
+     #$PIP config --user set global.trusted-host '''+ params['Repository'] +'''
+     $PIP install awscli -i http://'''+ params['Repository'] +'''/simple --trusted-host '''+ params['Repository'] +'''
      yum install -y nfs-utils # enforce install of nfs-utils
+
 else
      yum install -y python3-pip
      PIP=$(which pip3)

@@ -277,7 +277,7 @@ def create():
     soca_private_subnets = [soca_configuration["PrivateSubnet1"],
                             soca_configuration["PrivateSubnet2"],
                             soca_configuration["PrivateSubnet3"]]
-    repository_ip = soca_configuration["RepositoryIP"]
+    repository = soca_configuration["Repository"]
 
     # sanitize session_name, limit to 255 chars
     if parameters["session_name"] is False:
@@ -308,17 +308,17 @@ export PATH=$PATH:/usr/local/bin
 if [[ "''' + base_os + '''" == "centos7" ]] || [[ "''' + base_os + '''" == "rhel7" ]];
 then
         mv /etc/yum.repos.d/CentOS-* /tmp
-        cat << EOF > /etc/yum.repos.d/local.repo
-        [local]
-        name=local repository
-        baseurl=http:// '''+ repository_ip +'''
-        gpgcheck=0
-        enabled=1
-        EOF
-        
+        echo "[private]" >> /etc/yum.repos.d/local.repo
+        echo "name=private repository" >> /etc/yum.repos.d/local.repo
+        echo "baseurl=http://'''+ repository +'''" >> /etc/yum.repos.d/local.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/local.repo
+        echo "enabled=1" >> /etc/yum.repos.d/local.repo
+
         yum install -y python3-pip
         PIP=$(which pip3)
-        $PIP install awscli
+        #$PIP config --user set global.index-url http://'''+ repository +'''/simple
+        #$PIP config --user set global.trusted-host '''+ repository +'''
+        $PIP install awscli -i http://'''+ repository +'''/simple --trusted-host '''+ repository +'''
         yum install -y nfs-utils # enforce install of nfs-utils
 else
      yum install -y python3-pip

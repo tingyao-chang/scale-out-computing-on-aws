@@ -100,7 +100,7 @@ Parameters:
   DefaultMetricCollection:
     Type: String
 
-  RepositoryIP:
+  Repository:
     Type: String
 
 Resources:
@@ -243,7 +243,7 @@ Resources:
       "LdapBase": "DC=soca,dc=local",
       "LdapHost": "${SchedulerPrivateDnsName}",
       "DefaultMetricCollection": "${DefaultMetricCollection}",
-      "RepositoryIP": "${RepositoryIP}"
+      "Repository": "${Repository}"
       }'
 
       Tags:
@@ -497,5 +497,3 @@ Resources:
           - ConditionType: "STRINGEQUALS"
             ConditionKey: "soca:BackupPlan"
             ConditionValue: !Sub ${ClusterId}
-
-

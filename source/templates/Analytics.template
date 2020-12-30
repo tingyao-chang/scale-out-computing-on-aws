@@ -13,9 +13,6 @@ Parameters:
   SchedulerPublicIP:
     Type: String
 
-  EIPNat:
-    Type: String
-
   ClientIp:
     Type: String
 
@@ -56,7 +53,6 @@ Resources:
                 aws:SourceIp:
                   - !Ref ClientIp
                   - !Sub ${SchedulerPublicIP}/32
-                  - !Sub ${EIPNat}/32
             Resource: !Sub 'arn:${AWS::Partition}:es:${AWS::Region}:${AWS::AccountId}:domain/${ClusterId}/*'
 
       AdvancedOptions:

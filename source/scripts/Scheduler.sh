@@ -9,7 +9,7 @@ if [ $# -lt 2 ]
 fi
 
 # Install SSM
-yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+yum install -y $SSM_URL
 systemctl enable amazon-ssm-agent
 systemctl restart amazon-ssm-agent
 
@@ -354,7 +354,7 @@ echo "UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config
 
 # Install Python required libraries
 # Source environment to reload path for Python3
-/apps/soca/$SOCA_CONFIGURATION/python/$PYTHON_VERSION/bin/pip3 install -r /root/requirements.txt
+/apps/soca/$SOCA_CONFIGURATION/python/$PYTHON_VERSION/bin/pip3 install -r /root/requirements.txt -i http://$REPOSITORY/simple --trusted-host $REPOSITORY
 
 # Configure Chrony
 yum remove -y ntp

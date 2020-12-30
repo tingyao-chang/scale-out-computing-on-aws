@@ -53,7 +53,7 @@ Parameters:
   SchedulerPublicIPAllocation:
     Type: String
 
-  RepositoryIP:
+  Repository:
     Type: String
     
 Conditions:
@@ -97,12 +97,12 @@ Resources:
 
             export PATH=$PATH:/usr/local/bin
             # Deactivate shell to make sure users won't access the cluster if it's not ready
-            echo '
-            ************* SOCA FIRST TIME CONFIGURATION *************
-            Hold on, cluster is not ready yet.
-            Please wait ~30 minutes as SOCA is being installed.
-            Once cluster is ready to use, this message will be replaced automatically and you will be able to SSH.
-            *********************************************************' > /etc/nologin
+            #echo '
+            #************* SOCA FIRST TIME CONFIGURATION *************
+            #Hold on, cluster is not ready yet.
+            #Please wait ~30 minutes as SOCA is being installed.
+            #Once cluster is ready to use, this message will be replaced automatically and you will be able to SSH.
+            #*********************************************************' > /etc/nologin
 
             if [ "${BaseOS}" == "amazonlinux2" ] || [ "${BaseOS}" == "rhel7" ];
               then
@@ -111,7 +111,13 @@ Resources:
 
             if [ "${BaseOS}" == "centos7" ];
               then
-                usermod --shell /usr/sbin/nologin centos
+                #usermod --shell /usr/sbin/nologin centos
+                mv /etc/yum.repos.d/CentOS-* /tmp
+                echo "[private]" >> /etc/yum.repos.d/local.repo
+                echo "name=private repository" >> /etc/yum.repos.d/local.repo
+                echo "baseurl=http://${Repository}" >> /etc/yum.repos.d/local.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/local.repo
+                echo "enabled=1" >> /etc/yum.repos.d/local.repo
             fi
 
             # Install awscli
@@ -119,7 +125,9 @@ Resources:
             then
               yum install -y python3-pip
               PIP=$(which pip3)
-              $PIP install awscli
+              #$PIP config --user set global.index-url http://${Repository}/simple
+              #$PIP config --user set global.trusted-host ${Repository}
+              $PIP install awscli -i http://${Repository}/simple --trusted-host ${Repository}
               export PATH=$PATH:/usr/local/bin
             fi
 
@@ -139,6 +147,7 @@ Resources:
             echo export "SOCA_INSTALL_BUCKET_FOLDER=${S3InstallFolder}" >> /etc/environment
             echo export "SOCA_VERSION=${Version}" >> /etc/environment
             echo export "SOCA_INSTALL_AMI=${ImageId}" >> /etc/environment
+            echo export "REPOSITORY=${Repository}" >> /etc/environment
             source /etc/environment
 
             # Tag EBS disks manually as CFN ASG does not support it

@@ -54,10 +54,10 @@ rpm -ivh nice-xdcv-*.rpm --nodeps
 rpm -ivh nice-dcv-server*.rpm --nodeps
 
 # Enable DCV support for USB remotization
-yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
-yum install -y dkms
-DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
-$DCVUSBDRIVERINSTALLER --quiet
+#yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+#yum install -y dkms
+#DCVUSBDRIVERINSTALLER=$(which dcvusbdriverinstaller)
+#$DCVUSBDRIVERINSTALLER --quiet
 
 # Enable GPU support
 if [[ "${GPU_INSTANCE_FAMILY[@]}" =~ "${INSTANCE_FAMILY}" ]];

@@ -26,16 +26,9 @@ Metadata:
           - UserName
           - UserPassword
       - Label:
-          default: Local Repository
+          default: Private repository
         Parameters:
-          - RepositoryIP
-      - Label:
-          default: VPC Peering information
-        Parameters:
-          - PeerVPCAccountId
-          - PeerVPCId
-          - PeerRoleArn
-          - PeerVPCCidr
+          - Repository
 
     ParameterLabels:
       VpcCidr:
@@ -58,8 +51,6 @@ Metadata:
         default: Username for your default LDAP user
       UserPassword:
         default: Password for your default LDAP user
-      RepositoryIP:
-        default: IP for your local repository
 
 Parameters:
   CustomAMI:
@@ -123,21 +114,10 @@ Parameters:
     Description: "5 characters minimum. Must start with a letter. Special chars accepted: !#@+_^{}[]()"
     ConstraintDescription: "5 characters minimum. Must start with a letter. Special chars accepted: !#@+_^{}[]()"
 
-  RepositoryIP:
+  Repository:
     Type: String
-    Description: IP of the yum repository
-
-  PeerVPCAccountId:
-    Type: String
-  
-  PeerVPCId:
-    Type: String
-  
-  PeerRoleArn:
-    Type: String
-  
-  PeerVPCCidr:
-    Type: String
+    Default: vde-yum-repository.s3-website-us-west-2.amazonaws.com
+    Description: Please enter hostname only, don't include http.
   
 Mappings:
   Send:
@@ -152,8 +132,6 @@ Mappings:
       centos7: centos
       amazonlinux2: ec2-user
       rhel7: ec2-user
-
-
 
   RegionMap:
     ap-east-1: # Hong Kong
@@ -338,8 +316,8 @@ Resources:
       StackName: !Ref "AWS::StackName"
       ClusterIdPrefix: !FindInMap [ Info, Data, ClusterIdPrefix ]
       VPCCidrPrefixBits: !Select [1, !Split [ "/", !Ref VpcCidr ]]
-      PublicSubnetMaskPrefixBits: 4
-      PrivateSubnetMaskPrefixBits: 2
+      PublicSubnetMaskPrefixBits: 6
+      PrivateSubnetMaskPrefixBits: 3
 
   # ============ END PRE-REQUISITE ============ #
 
@@ -352,10 +330,6 @@ Resources:
         ClusterId: !GetAtt CheckSOCAPreRequisite.ClusterId
         PublicSubnetMaskBits: !GetAtt CheckSOCAPreRequisite.PublicSubnetMaskBits
         PrivateSubnetMaskBits: !GetAtt CheckSOCAPreRequisite.PrivateSubnetMaskBits
-        PeerVPCAccountId: !Ref PeerVPCAccountId
-        PeerVPCId: !Ref PeerVPCId
-        PeerRoleArn: !Ref PeerRoleArn
-        PeerVPCCidr: !Ref PeerVPCCidr
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Network.template"] ]
 
   Security:
@@ -369,9 +343,20 @@ Resources:
         S3InstallBucket: !Ref S3InstallBucket
         S3InstallFolder: !Ref S3InstallFolder
         SchedulerPublicIP: !GetAtt Network.Outputs.SchedulerPublicIP
-        EIPNat: !GetAtt Network.Outputs.EIPNat
-
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Security.template"] ]
+      TimeoutInMinutes: 30
+      
+  VPCEndpoints:
+    DependsOn: Security
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        VpcId: !GetAtt Network.Outputs.VpcId
+        SubnetId: !GetAtt Network.Outputs.PublicSubnet1
+        RouteTableId: !GetAtt Network.Outputs.PublicRouteTable
+        SchedulerSecurityGroupId: !GetAtt Security.Outputs.SchedulerSecurityGroup
+        ComputeNodeSecurityGroupId: !GetAtt Security.Outputs.ComputeNodeSecurityGroup
+      TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/VPCEndpoints.template"] ]
       TimeoutInMinutes: 30
 
   Storage:
@@ -411,7 +396,7 @@ Resources:
         UserPassword: !Ref UserPassword
         SchedulerPublicIP: !GetAtt Network.Outputs.SchedulerPublicIP
         SchedulerPublicIPAllocation: !GetAtt Network.Outputs.SchedulerPublicIPAllocation
-        RepositoryIP: !Ref RepositoryIP
+        Repository: !Ref Repository
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Scheduler.template"] ]
       TimeoutInMinutes: 60
 
@@ -425,8 +410,6 @@ Resources:
         ClusterId: !GetAtt CheckSOCAPreRequisite.ClusterId
         ClientIp: !Ref ClientIp
         SchedulerPublicIP: !GetAtt Network.Outputs.SchedulerPublicIP
-        EIPNat: !GetAtt Network.Outputs.EIPNat
-
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Analytics.template"] ]
       TimeoutInMinutes: 30
 
@@ -446,7 +429,6 @@ Resources:
         LambdaACMIAMRoleArn: !GetAtt Security.Outputs.LambdaACMIAMRoleArn
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Viewer.template"] ]
       TimeoutInMinutes: 30
-
 
   Configuration:
     DependsOn: Viewer
@@ -486,7 +468,7 @@ Resources:
         BaseOS: !Ref BaseOS
         SolutionMetricsRoleArn: !GetAtt Security.Outputs.SolutionMetricsRoleArn
         DefaultMetricCollection: !FindInMap [ Send, AnonymousUsage, Data ]
-        RepositoryIP: !Ref RepositoryIP
+        Repository: !Ref Repository
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Configuration.template"] ]
       TimeoutInMinutes: 60
 
@@ -509,5 +491,5 @@ Outputs:
     Value: !If [UseCustomAMI, !Ref CustomAMI, !FindInMap [RegionMap, !Ref "AWS::Region", !Ref BaseOS]]
   Version:
     Value: !FindInMap [ Info, Data, Version ]
-  RepositoryIP:
-    Value: !Ref RepositoryIP
+  Repository:
+    Value: !Ref Repository

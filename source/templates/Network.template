@@ -12,14 +12,6 @@ Parameters:
     Type: String
   PrivateSubnetMaskBits:
     Type: String
-  PeerVPCAccountId:
-    Type: String
-  PeerVPCId:
-    Type: String
-  PeerRoleArn:
-    Type: String
-  PeerVPCCidr:
-    Type: String
 
 Resources:
   Vpc:
@@ -38,14 +30,6 @@ Resources:
           Value: !Sub ${ClusterId}-VPC
         - Key: soca:ClusterId
           Value: !Ref ClusterId
-
-  vpcPeeringConnection:
-    Type: AWS::EC2::VPCPeeringConnection
-    Properties:
-      VpcId: !Ref Vpc
-      PeerVpcId: !Ref PeerVPCId
-      PeerOwnerId: !Ref PeerVPCAccountId
-      PeerRoleArn: !Ref PeerRoleArn
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -137,12 +121,6 @@ Resources:
         - Key: soca:ClusterId
           Value: !Ref ClusterId
 
-  EIPNat:
-    DependsOn: PublicSubnet1
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc
-
   EIPScheduler:
     Type: AWS::EC2::EIP
     Properties:
@@ -150,19 +128,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref ClusterId
-        - Key: soca:ClusterId
-          Value: !Ref ClusterId
-
-
-  NatGateway:
-    DependsOn: EIPNat
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt EIPNat.AllocationId
-      SubnetId: !Ref PublicSubnet1
-      Tags:
-        - Key: Name
-          Value: !Sub ${ClusterId}-NATGateway
         - Key: soca:ClusterId
           Value: !Ref ClusterId
 
@@ -206,30 +171,6 @@ Resources:
       DestinationCidrBlock: '0.0.0.0/0'
       GatewayId: !Ref InternetGateway
       RouteTableId: !Ref PublicRouteTable
-
-  PrivateRoute:
-    DependsOn: PrivateRouteTable
-    Type: AWS::EC2::Route
-    Properties:
-      DestinationCidrBlock: '0.0.0.0/0'
-      NatGatewayId: !Ref NatGateway
-      RouteTableId: !Ref PrivateRouteTable
-
-  PeeringPublicRoute:
-    DependsOn: PublicRouteTable
-    Type: AWS::EC2::Route
-    Properties:
-      DestinationCidrBlock: !Ref PeerVPCCidr
-      VpcPeeringConnectionId: !Ref vpcPeeringConnection
-      RouteTableId: !Ref PublicRouteTable
-
-  PeeringPrivateRoute:
-    DependsOn: PrivateRouteTable
-    Type: AWS::EC2::Route
-    Properties:
-      DestinationCidrBlock: !Ref PeerVPCCidr
-      VpcPeeringConnectionId: !Ref vpcPeeringConnection
-      RouteTableId: !Ref PrivateRouteTable
   
   PublicRouteSubnetAssociation1:
     DependsOn: PublicRouteTable
@@ -288,11 +229,9 @@ Outputs:
     Value: !Ref PrivateSubnet2
   PrivateSubnet3:
     Value: !Ref PrivateSubnet3
-  EIPNat:
-    Value: !Ref EIPNat
+  PublicRouteTable:
+    Value: !Ref PublicRouteTable
   SchedulerPublicIP:
     Value: !Ref EIPScheduler
   SchedulerPublicIPAllocation:
     Value: !GetAtt EIPScheduler.AllocationId
-  VPCPeeringConnectionId:
-    Value: !Ref vpcPeeringConnection

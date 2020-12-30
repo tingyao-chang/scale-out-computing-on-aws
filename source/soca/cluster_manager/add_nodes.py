@@ -755,9 +755,9 @@ def main(**kwargs):
                 'Key': 'scratch_iops',
                 'Default': 0
             },
-            'RepositoryIP': {
-                'Key': 'repository_ip',
-                'Default': aligo_configuration['RepositoryIP']
+            'Repository': {
+                'Key': 'repository',
+                'Default': aligo_configuration['Repository']
             }
         }
 
