@@ -286,6 +286,30 @@ ou: Group
 
 /bin/ldapadd -x -W -y /root/OpenLdapAdminPassword.txt -D "cn=admin,$LDAP_BASE" -f base.ldif
 
+# Add ldap audit log
+mkdir -p /var/log/openldap/
+chown -R ldap:ldap /var/log/openldap/
+
+echo -e "
+dn: cn=module,cn=config
+cn: module 
+objectClass: olcModuleList
+olcModulePath: /usr/lib64/openldap
+olcModuleLoad: auditlog.la
+" > loadmodule.ldif
+
+echo -e "
+dn: olcOverlay=auditlog,olcDatabase={2}hdb,cn=config
+changetype: add
+objectClass: olcOverlayConfig
+objectClass: olcAuditLogConfig
+olcOverlay: auditlog
+olcAuditlogFile: /var/log/openldap/auditlog.ldif
+" > applyoverlay.ldif
+
+/bin/ldapadd -Y EXTERNAL -H ldapi:/// -f loadmodule.ldif
+/bin/ldapadd -Y EXTERNAL -H ldapi:/// -f applyoverlay.ldif
+
 authconfig \
     --enablesssd \
     --enablesssdauth \
@@ -354,7 +378,7 @@ echo "UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config
 
 # Install Python required libraries
 # Source environment to reload path for Python3
-/apps/soca/$SOCA_CONFIGURATION/python/$PYTHON_VERSION/bin/pip3 install -r /root/requirements.txt -i http://$REPOSITORY/simple --trusted-host $REPOSITORY
+/apps/soca/$SOCA_CONFIGURATION/python/$PYTHON_VERSION/bin/pip3 install -r /root/requirements.txt -i http://$REPOSITORY/python-$PYTHON_VERSION --trusted-host $REPOSITORY
 
 # Configure Chrony
 yum remove -y ntp

@@ -353,7 +353,8 @@ Resources:
       Parameters:
         VpcId: !GetAtt Network.Outputs.VpcId
         SubnetId: !GetAtt Network.Outputs.PublicSubnet1
-        RouteTableId: !GetAtt Network.Outputs.PublicRouteTable
+        PublicRouteTableId: !GetAtt Network.Outputs.PublicRouteTable
+        PrivateRouteTableId: !GetAtt Network.Outputs.PrivateRouteTable
         SchedulerSecurityGroupId: !GetAtt Security.Outputs.SchedulerSecurityGroup
         ComputeNodeSecurityGroupId: !GetAtt Security.Outputs.ComputeNodeSecurityGroup
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/VPCEndpoints.template"] ]

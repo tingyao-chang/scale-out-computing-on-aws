@@ -5,7 +5,9 @@ Parameters:
     Type: String
   SubnetId:
     Type: String
-  RouteTableId:
+  PublicRouteTableId:
+    Type: String
+  PrivateRouteTableId:
     Type: String
   SchedulerSecurityGroupId:
     Type: String
@@ -83,9 +85,6 @@ Resources:
     Properties: 
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
       RouteTableIds: 
-        - !Ref RouteTableId
+        - !Ref PublicRouteTableId
+        - !Ref PrivateRouteTableId
       VpcId: !Ref VpcId
-
-Outputs:
-  CloudFormationVPCEndpoint:
-    Value: !Ref CloudFormationVPCEndpoint

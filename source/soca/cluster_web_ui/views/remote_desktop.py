@@ -308,11 +308,26 @@ export PATH=$PATH:/usr/local/bin
 if [[ "''' + base_os + '''" == "centos7" ]] || [[ "''' + base_os + '''" == "rhel7" ]];
 then
         mv /etc/yum.repos.d/CentOS-* /tmp
-        echo "[private]" >> /etc/yum.repos.d/local.repo
-        echo "name=private repository" >> /etc/yum.repos.d/local.repo
-        echo "baseurl=http://'''+ repository +'''" >> /etc/yum.repos.d/local.repo
-        echo "gpgcheck=0" >> /etc/yum.repos.d/local.repo
-        echo "enabled=1" >> /etc/yum.repos.d/local.repo
+        echo "[base]" >> /etc/yum.repos.d/private.repo
+        echo "name=CentOS-7 - Base" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/base" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+        echo "[updates]" >> /etc/yum.repos.d/private.repo
+        echo "name=CentOS-7 - Updates" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/updates" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+        echo "[extras]" >> /etc/yum.repos.d/private.repo
+        echo "name=CentOS-7 - Extras" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/extras" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+        echo "[centosplus]" >> /etc/yum.repos.d/private.repo
+        echo "name=CentOS-7 - Plus" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/centosplus" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo "enabled=1" >> /etc/yum.repos.d/private.repo
 
         yum install -y python3-pip
         PIP=$(which pip3)

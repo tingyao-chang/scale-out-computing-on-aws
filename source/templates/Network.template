@@ -231,6 +231,8 @@ Outputs:
     Value: !Ref PrivateSubnet3
   PublicRouteTable:
     Value: !Ref PublicRouteTable
+  PrivateRouteTable:
+    Value: !Ref PrivateRouteTable
   SchedulerPublicIP:
     Value: !Ref EIPScheduler
   SchedulerPublicIPAllocation:
