@@ -31,7 +31,7 @@ class Config(object):
     DEFAULT_CACHE_TIME = 120  # 2 minutes. Change this value to optimize performance in case you have a large number of concurrent user
     MAX_UPLOAD_FILE = 5120  # 5 GB
     MAX_UPLOAD_TIMEOUT = 1800000  # 30 minutes
-    ALLOW_DOWNLOAD_FROM_PORTAL = True  # Give user ability to download files from the web portal
+    ALLOW_DOWNLOAD_FROM_PORTAL = False  # Give user ability to download files from the web portal
     MAX_SIZE_ONLINE_PREVIEW = 150000000  # in bytes (150mb by default), maximum size of file that can be visualized via the web editor
     MAX_ARCHIVE_SIZE = 150000000  # in bytes (150mb by default), maximum size of archive generated when downloading multiple files at once
     DAILY_BACKUP_COUNT = 15  # Keep 15 latest daily backups

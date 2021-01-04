@@ -117,6 +117,7 @@ if [[ "$SOCA_FSX_LUSTRE_BUCKET" != 'false' ]] || [[ "$SOCA_FSX_LUSTRE_DNS" != 'f
             yum clean all
             yum install -y kmod-lustre-client lustre-client
             REQUIRE_REBOOT=1
+        # wip
         elif [[ $kernel == *"3.10.0-1160"*$machine ]]; then
             wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
             rpm --import /tmp/fsx-rpm-public-key.asc
