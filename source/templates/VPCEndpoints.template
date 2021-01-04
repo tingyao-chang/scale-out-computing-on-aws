@@ -15,6 +15,19 @@ Parameters:
     Type: String
 
 Resources:
+  AutoScalingVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.autoscaling'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
   CloudFormationVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties: 
@@ -28,6 +41,19 @@ Resources:
       VpcEndpointType: Interface
       VpcId: !Ref VpcId
   
+  EC2VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+  
   EC2MessagesVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties: 
@@ -36,6 +62,19 @@ Resources:
         - !Ref SchedulerSecurityGroupId
         - !Ref ComputeNodeSecurityGroupId
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2messages'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  ELBEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.elasticloadbalancing'
       SubnetIds: 
         - !Ref SubnetId
       VpcEndpointType: Interface
