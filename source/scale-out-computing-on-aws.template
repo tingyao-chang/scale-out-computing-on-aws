@@ -408,6 +408,7 @@ Resources:
       Parameters:
         SchedulerSecurityGroup: !GetAtt Security.Outputs.SchedulerSecurityGroup
         PublicSubnet1: !GetAtt Network.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt Network.Outputs.PublicSubnet2
         ClusterId: !GetAtt CheckSOCAPreRequisite.ClusterId
         ClientIp: !Ref ClientIp
         SchedulerPublicIP: !GetAtt Network.Outputs.SchedulerPublicIP

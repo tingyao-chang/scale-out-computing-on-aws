@@ -87,6 +87,11 @@ then
      echo "name=CentOS-7 - Plus" >> /etc/yum.repos.d/private.repo
      echo "baseurl=http://'''+ params['Repository'] + '''/centosplus" >> /etc/yum.repos.d/private.repo
      echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+     echo -e "enabled=0\n" >> /etc/yum.repos.d/private.repo
+     echo "[aws-fsx]" >> /etc/yum.repos.d/private.repo
+     echo "name=AWS FSx Packages  - $basearch" >> /etc/yum.repos.d/private.repo
+     echo "baseurl=http://'''+ params['Repository'] + '''/aws-fsx" >> /etc/yum.repos.d/private.repo
+     echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
      echo "enabled=1" >> /etc/yum.repos.d/private.repo
 
      yum install -y python3-pip
@@ -233,7 +238,7 @@ $AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.
                 DeviceName="/dev/xvda" if params["BaseOS"] == "amazonlinux2" else "/dev/sda1",
                 Ebs=EBSBlockDevice(
                     VolumeSize=params["RootSize"],
-                    VolumeType="gp2",
+                    VolumeType="gp3",
                     DeleteOnTermination="false" if params["KeepEbs"] is True else "true",
                     Encrypted=True))
         ]
@@ -243,7 +248,7 @@ $AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.
                     DeviceName="/dev/xvdbx",
                     Ebs=EBSBlockDevice(
                         VolumeSize=params["ScratchSize"],
-                        VolumeType="io1" if int(params["VolumeTypeIops"]) > 0 else "gp2",
+                        VolumeType="io2" if int(params["VolumeTypeIops"]) > 0 else "gp3",
                         Iops=params["VolumeTypeIops"] if int(params["VolumeTypeIops"]) > 0 else Ref("AWS::NoValue"),
                         DeleteOnTermination="false" if params["KeepEbs"] is True else "true",
                         Encrypted=True))

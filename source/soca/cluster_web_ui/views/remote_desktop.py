@@ -54,7 +54,7 @@ def can_launch_instance(launch_parameters):
                     'Ebs': {
                         'DeleteOnTermination': True,
                         'VolumeSize': 30 if launch_parameters["disk_size"] is False else int(launch_parameters["disk_size"]),
-                        'VolumeType': 'gp2',
+                        'VolumeType': 'gp3',
                         'Encrypted': True
                     },
                 },
@@ -327,7 +327,7 @@ then
         echo "name=CentOS-7 - Plus" >> /etc/yum.repos.d/private.repo
         echo "baseurl=http://'''+ repository + '''/centosplus" >> /etc/yum.repos.d/private.repo
         echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
-        echo "enabled=1" >> /etc/yum.repos.d/private.repo
+        echo "enabled=0" >> /etc/yum.repos.d/private.repo
 
         yum install -y python3-pip
         PIP=$(which pip3)
