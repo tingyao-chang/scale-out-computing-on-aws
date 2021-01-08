@@ -102,6 +102,9 @@ Parameters:
 
   Repository:
     Type: String
+    
+  AcceleratorDNS:
+    Type: String
 
 Resources:
   SolutionMetricLambda:
@@ -234,7 +237,8 @@ Resources:
       "SSHKeyPair": "${SSHKeyPair}",
       "CustomAMI": "${ImageId}",
       "ESDomainEndpoint": "${ESDomainEndpoint}",
-      "LoadBalancerDNSName": "${LoadBalancerDNSName}",
+      "LoadBalancerDNSNameOriginal": "${LoadBalancerDNSName}",
+      "LoadBalancerDNSName": "${AcceleratorDNS}",
       "LoadBalancerArn": "${LoadBalancerArn}",
       "BaseOS": "${BaseOS}",
       "S3InstallFolder": "${S3InstallFolder}",
@@ -243,7 +247,10 @@ Resources:
       "LdapBase": "DC=soca,dc=local",
       "LdapHost": "${SchedulerPrivateDnsName}",
       "DefaultMetricCollection": "${DefaultMetricCollection}",
-      "Repository": "${Repository}"
+      "Repository": "${Repository}",
+      "AcceleratorDNS": "${AcceleratorDNS}",
+      "FSxLustreFileSystemId": "${FSxLustreFileSystemId}",
+      "FSxLustreMountName": "${FSxLustreMountName}"
       }'
 
       Tags:

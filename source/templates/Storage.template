@@ -30,6 +30,14 @@ Parameters:
     Type: String
     Default: 2000000000000
 
+  StorageCapacity:
+    Type: Integer
+    Default: 1200
+
+  DeploymentType:
+    Type: String
+    Default: SCRATCH_2
+
 Resources:
   EFSApps:
     Type: AWS::EFS::FileSystem
@@ -112,7 +120,6 @@ Resources:
       SecurityGroups:
         - !Ref SchedulerSecurityGroup
         - !Ref ComputeNodeSecurityGroup
-
 
   SNSEFSTopic:
     Metadata:
@@ -243,7 +250,6 @@ Resources:
                 Resource:
                   - !Join [ "", [ "arn:", !Ref "AWS::Partition", ":elasticfilesystem:", !Ref "AWS::Region", ":", !Ref  "AWS::AccountId", ":file-system/*"] ]
 
-
   EFSThroughputLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -316,6 +322,27 @@ Resources:
       FunctionName: !Ref EFSThroughputLambda
       Principal: sns.amazonaws.com
 
+  # Lustre
+  LustreFileSystem:
+    Type: AWS::FSx::FileSystem
+    Properties:
+      FileSystemType: "LUSTRE"
+      StorageCapacity: !Ref StorageCapacity
+      SubnetIds:
+        - !Ref PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroup
+        - !Ref ComputeNodeSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterId}-FSx_Lustre
+        - Key: soca:ClusterId
+          Value: !Ref ClusterId
+        - Key: soca:BackupPlan
+          Value: !Sub ${ClusterId}
+      LustreConfiguration:
+        DeploymentType: !Ref DeploymentType
+
 Outputs:
   EFSApps:
     Value: !Ref EFSApps
@@ -330,4 +357,10 @@ Outputs:
     Value: !Join [ ".", [ !Ref EFSData, 'efs', !Ref "AWS::Region", !Ref "AWS::URLSuffix"] ]
 
   EFSMountParameters:
-     Value: 'nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport'
+    Value: 'nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport'
+
+  FSxLustreFileSystemId:
+    Value: !Ref LustreFileSystem
+
+  FSxLustreMountName:
+    Value: !GetAtt LustreFileSystem.LustreMountName

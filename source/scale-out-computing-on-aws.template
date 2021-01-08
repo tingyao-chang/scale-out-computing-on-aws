@@ -29,6 +29,11 @@ Metadata:
           default: Private repository
         Parameters:
           - Repository
+      - Label:
+          default: FSx for Lustre
+        Parameters:
+          - StorageCapacity
+          - DeploymentType
 
     ParameterLabels:
       VpcCidr:
@@ -118,7 +123,17 @@ Parameters:
     Type: String
     Default: vde-yum-repository.s3-website-us-west-2.amazonaws.com
     Description: Please enter hostname only, don't include http.
-  
+
+  DeploymentType:
+    Type: String
+    Default: SCRATCH_2
+    Description: "Allowed values: PERSISTENT_1 | SCRATCH_1 | SCRATCH_2"
+
+  StorageCapacity:
+    Type: Integer
+    Default: 1200
+    Description: "For SCRATCH_2 and PERSISTENT_1 SSD deployment types, valid values are 1200 GiB, 2400 GiB, and increments of 2400 GiB."
+
 Mappings:
   Send:
     AnonymousUsage:
@@ -372,6 +387,8 @@ Resources:
         PrivateSubnet2: !GetAtt Network.Outputs.PrivateSubnet2
         PrivateSubnet3: !GetAtt Network.Outputs.PrivateSubnet3
         ClusterId: !Join [ "-", [ !FindInMap [ Info, Data, ClusterIdPrefix ], !Ref "AWS::StackName"] ]
+        StorageCapacity: !Ref StorageCapacity
+        DeploymentType: !Ref DeploymentType
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Storage.template"] ]
       TimeoutInMinutes: 30
 
@@ -471,6 +488,9 @@ Resources:
         SolutionMetricsRoleArn: !GetAtt Security.Outputs.SolutionMetricsRoleArn
         DefaultMetricCollection: !FindInMap [ Send, AnonymousUsage, Data ]
         Repository: !Ref Repository
+        AcceleratorDNS: !GetAtt Viewer.Outputs.AcceleratorDNS
+        FSxLustreFileSystemId: !GetAtt Storage.Outputs.FSxLustreFileSystemId
+        FSxLustreMountName: !GetAtt Storage.Outputs.FSxLustreMountName
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Configuration.template"] ]
       TimeoutInMinutes: 60
 
