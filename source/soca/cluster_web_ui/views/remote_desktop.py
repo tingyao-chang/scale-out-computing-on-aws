@@ -327,7 +327,12 @@ then
         echo "name=CentOS-7 - Plus" >> /etc/yum.repos.d/private.repo
         echo "baseurl=http://'''+ repository + '''/centosplus" >> /etc/yum.repos.d/private.repo
         echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
-        echo "enabled=0" >> /etc/yum.repos.d/private.repo
+        echo -e "enabled=0\n" >> /etc/yum.repos.d/private.repo
+        echo "[aws-fsx]" >> /etc/yum.repos.d/private.repo
+        echo "name=AWS FSx Packages  - $basearch" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/aws-fsx" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo "enabled=1" >> /etc/yum.repos.d/private.repo
 
         yum install -y python3-pip
         PIP=$(which pip3)
@@ -359,6 +364,9 @@ echo export "SOCA_INSTALL_BUCKET_FOLDER="''' + str(soca_configuration['S3Install
 echo export "SOCA_INSTANCE_TYPE=$GET_INSTANCE_TYPE" >> /etc/environment
 echo export "SOCA_HOST_SYSTEM_LOG="/apps/soca/''' + str(soca_configuration['ClusterId']) + '''/cluster_node_bootstrap/logs/desktop/''' + str(session["user"]) + '''/''' + session_name + '''/$(hostname -s)"" >> /etc/environment
 echo export "AWS_DEFAULT_REGION="'''+region+'''"" >> /etc/environment
+echo export "SOCA_FSX_LUSTRE_FILE_SYSTEM_ID="''' + soca_configuration["FSxLustreFileSystemId"] + '''"" >> /etc/environment
+echo export "SOCA_FSX_LUSTRE_MOUNT_NAME="''' + soca_configuration["FSxLustreMountName"] + '''"" >> /etc/environment
+
 source /etc/environment
 AWS=$(which aws)
 # Give yum permission to the user on this specific machine
