@@ -51,6 +51,11 @@ Resources:
             Principal:
               AWS: '*'
             Action: 'es:ESHttp*'
+            Condition:
+              IpAddress:
+                aws:SourceIp:
+                  - !Ref ClientIp
+                  - !Sub ${SchedulerPublicIP}/32
             Resource: !Sub 'arn:${AWS::Partition}:es:${AWS::Region}:${AWS::AccountId}:domain/${ClusterId}/*'
 
       AdvancedOptions:
@@ -65,12 +70,12 @@ Resources:
       # Cloudformation does not support bind of ElasticSearchServiceLinkedRole to ElasticsearchDomain
       # Because of this limitation we are restricted to non VPC only
 
-      VPCOptions:
-        SubnetIds:
-          - !Ref PublicSubnet1
-          - !Ref PublicSubnet2
-        SecurityGroupIds:
-          - !Ref SchedulerSecurityGroup
+      #VPCOptions:
+      #  SubnetIds:
+      #    - !Ref PublicSubnet1
+      #    - !Ref PublicSubnet2
+      #  SecurityGroupIds:
+      #    - !Ref SchedulerSecurityGroup
 
       #ElasticSearchServiceLinkedRole:
       #  Type: AWS::IAM::ServiceLinkedRole
