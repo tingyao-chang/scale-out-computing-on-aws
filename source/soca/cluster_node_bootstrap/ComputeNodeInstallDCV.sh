@@ -72,18 +72,13 @@ fi
 mv /etc/dcv/dcv.conf /etc/dcv/dcv.conf.orig
 IDLE_TIMEOUT=1440 # in minutes. Disconnect DCV (but not terminate the session) after 1 day if not active
 USER_HOME=$(eval echo ~$SOCA_DCV_OWNER)
-DCV_STORAGE_ROOT="$USER_HOME/storage-root" # Create the storage root location if needed
-mkdir -p $DCV_STORAGE_ROOT
-chown $SOCA_DCV_OWNER:$SOCA_DCV_OWNER $DCV_STORAGE_ROOT
 
-echo -e """
-[license]
+echo -e """[license]
 [log]
 [session-management]
 virtual-session-xdcv-args=\"-listen tcp\"
 [session-management/defaults]
 [session-management/automatic-console-session]
-storage-root=\"$DCV_STORAGE_ROOT\"
 [display]
 # add more if using an instance with more GPU
 cuda-devices=[\"0\"]
@@ -98,6 +93,9 @@ idle-timeout=$IDLE_TIMEOUT
 auth-token-verifier=\"$SOCA_DCV_AUTHENTICATOR\"
 no-tls-strict=true
 os-auto-lock=false
+[clipboard]
+primary-selection-paste=false
+primary-selection-copy=false
 """ > /etc/dcv/dcv.conf
 
 # Start DCV server
@@ -113,17 +111,17 @@ systemctl disable firewalld
 systemctl isolate graphical.target
 
 # Start Session
-echo "Launching session ... : dcv create-session --user $SOCA_DCV_OWNER --owner $SOCA_DCV_OWNER --type virtual --storage-root "$DCV_STORAGE_ROOT" $SOCA_DCV_SESSION_ID"
-dcv create-session --user $SOCA_DCV_OWNER --owner $SOCA_DCV_OWNER --type virtual --storage-root "$DCV_STORAGE_ROOT" $SOCA_DCV_SESSION_ID
+echo "Launching session ... : dcv create-session --user $SOCA_DCV_OWNER --owner $SOCA_DCV_OWNER --type virtual $SOCA_DCV_SESSION_ID"
+dcv create-session --user $SOCA_DCV_OWNER --owner $SOCA_DCV_OWNER --type virtual $SOCA_DCV_SESSION_ID
 echo $?
 sleep 5
 
 # Final reboot is needed to update GPU drivers if running GPU instance. Reboot will be triggered by ComputeNodePostReboot.sh
 if [[ "${GPU_INSTANCE_FAMILY[@]}" =~ "${INSTANCE_FAMILY}" ]];
 then
-  echo "@reboot dcv create-session --owner $SOCA_DCV_OWNER --storage-root \"$DCV_STORAGE_ROOT\" $SOCA_DCV_SESSION_ID # Do Not Delete"| crontab - -u $SOCA_DCV_OWNER
+  echo "@reboot dcv create-session --owner $SOCA_DCV_OWNER $SOCA_DCV_SESSION_ID # Do Not Delete"| crontab - -u $SOCA_DCV_OWNER
   exit 3 # notify ComputeNodePostReboot.sh to force reboot
 else
-  echo "@reboot dcv create-session --owner $SOCA_DCV_OWNER --storage-root \"$DCV_STORAGE_ROOT\" $SOCA_DCV_SESSION_ID # Do Not Delete"| crontab - -u $SOCA_DCV_OWNER
+  echo "@reboot dcv create-session --owner $SOCA_DCV_OWNER $SOCA_DCV_SESSION_ID # Do Not Delete"| crontab - -u $SOCA_DCV_OWNER
   exit 0
 fi
