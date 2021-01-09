@@ -130,7 +130,7 @@ Parameters:
     Description: "Allowed values: PERSISTENT_1 | SCRATCH_1 | SCRATCH_2"
 
   StorageCapacity:
-    Type: Integer
+    Type: Number
     Default: 1200
     Description: "For SCRATCH_2 and PERSISTENT_1 SSD deployment types, valid values are 1200 GiB, 2400 GiB, and increments of 2400 GiB."
 

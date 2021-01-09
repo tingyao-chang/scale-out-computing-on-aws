@@ -105,6 +105,12 @@ Parameters:
     
   AcceleratorDNS:
     Type: String
+  
+  FSxLustreFileSystemId:
+    Type: String
+
+  FSxLustreMountName:
+    Type: String
 
 Resources:
   SolutionMetricLambda:

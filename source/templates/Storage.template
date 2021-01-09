@@ -31,7 +31,7 @@ Parameters:
     Default: 2000000000000
 
   StorageCapacity:
-    Type: Integer
+    Type: String
     Default: 1200
 
   DeploymentType:
@@ -338,8 +338,6 @@ Resources:
           Value: !Sub ${ClusterId}-FSx_Lustre
         - Key: soca:ClusterId
           Value: !Ref ClusterId
-        - Key: soca:BackupPlan
-          Value: !Sub ${ClusterId}
       LustreConfiguration:
         DeploymentType: !Ref DeploymentType
 
