@@ -94,8 +94,7 @@ auth-token-verifier=\"$SOCA_DCV_AUTHENTICATOR\"
 no-tls-strict=true
 os-auto-lock=false
 [clipboard]
-primary-selection-paste=false
-primary-selection-copy=false
+enabled=false
 """ > /etc/dcv/dcv.conf
 
 # Start DCV server
