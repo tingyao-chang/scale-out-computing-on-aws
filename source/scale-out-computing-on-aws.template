@@ -137,7 +137,7 @@ Parameters:
 Mappings:
   Send:
     AnonymousUsage:
-      Data: Yes # Must be either Yes or No. Do not use any single or double quotes. Refer to https://docs.aws.amazon.com/solutions/latest/scale-out-computing-on-aws/appendix-d.html
+      Data: No # Must be either Yes or No. Do not use any single or double quotes. Refer to https://docs.aws.amazon.com/solutions/latest/scale-out-computing-on-aws/appendix-d.html
 
   Info:
     Data:
@@ -437,10 +437,13 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        SchedulerSecurityGroup: !GetAtt Security.Outputs.SchedulerSecurityGroup
+        ApplicationLBSecurityGroup: !GetAtt Security.Outputs.ApplicationLBSecurityGroup
         PublicSubnet1: !GetAtt Network.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt Network.Outputs.PublicSubnet2
         PublicSubnet3: !GetAtt Network.Outputs.PublicSubnet3
+        PrivateSubnet1: !GetAtt Network.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt Network.Outputs.PrivateSubnet2
+        PrivateSubnet3: !GetAtt Network.Outputs.PrivateSubnet3
         ClusterId: !GetAtt CheckSOCAPreRequisite.ClusterId
         VpcId: !GetAtt Network.Outputs.VpcId
         SchedulerInstanceId: !GetAtt Scheduler.Outputs.SchedulerInstanceId

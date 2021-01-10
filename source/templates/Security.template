@@ -65,6 +65,17 @@ Resources:
         - Key: soca:ClusterId
           Value: !Ref ClusterId
 
+  ApplicationLBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: SG For Application Load Balancer
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterId}-ApplicationLBSG
+        - Key: soca:ClusterId
+          Value: !Ref ClusterId
+
   SchedulerInboundRule:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -74,46 +85,6 @@ Resources:
       SourceSecurityGroupId: !GetAtt ComputeNodeSecurityGroup.GroupId
       GroupId: !GetAtt SchedulerSecurityGroup.GroupId
       Description: "Allow all traffic between scheduler and compute nodes"
-
-  SchedulerInboundRuleAllowClientIP:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: !Ref ClientIp
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow SSH traffic from client IP to master host"
-
-  SchedulerInboundRuleAllowClientIPHTTPS:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 443
-      ToPort: 443
-      CidrIp: !Ref ClientIp
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow HTTPS traffic from client IP to ELB"
-
-  SchedulerInboundRuleAllowSchedulerIPHTTPS:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 443
-      ToPort: 443
-      CidrIp: !Join [ "", [ !Ref SchedulerPublicIP, "/32" ] ]
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow HTTPS traffic from Scheduler IP to ELB to validate DCV sessions"
-
-  SchedulerInboundRuleAllowClientIPHTTP:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 80
-      ToPort: 80
-      CidrIp: !Ref ClientIp
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow HTTP traffic from client IP to ELB"
 
   ComputeNodeInboundRule:
     Type: AWS::EC2::SecurityGroupIngress
@@ -132,6 +103,36 @@ Resources:
       SourceSecurityGroupId: !GetAtt ComputeNodeSecurityGroup.GroupId
       GroupId: !Ref ComputeNodeSecurityGroup
       Description: "Allow ALL traffic for ComputeNode and EFA"
+
+  ApplicationLBInboundRuleAllowClientIPHTTP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: !Ref ClientIp
+      GroupId: !GetAtt ApplicationLBSecurityGroup.GroupId
+      Description: "Allow HTTP traffic from client IP to ELB"
+
+  ApplicationLBInboundRuleAllowClientIPHTTPS:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: !Ref ClientIp
+      GroupId: !GetAtt ApplicationLBSecurityGroup.GroupId
+      Description: "Allow HTTPS traffic from client IP to ELB"
+
+  ApplicationLBInboundRuleAllowSchedulerIPHTTPS:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: !Join [ "", [ !Ref SchedulerPublicIP, "/32" ] ]
+      GroupId: !GetAtt ApplicationLBSecurityGroup.GroupId
+      Description: "Allow HTTPS traffic from Scheduler IP to ELB to validate DCV sessions"
 
   ComputeNodeOutboundItself:
     Type: AWS::EC2::SecurityGroupEgress
@@ -167,7 +168,7 @@ Resources:
       IpProtocol: tcp
       FromPort: 8443
       ToPort: 8443
-      SourceSecurityGroupId: !GetAtt SchedulerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt ApplicationLBSecurityGroup.GroupId
       GroupId: !Ref SchedulerSecurityGroup
       Description: "Allow ELB healtcheck to communicate with web ui on master host"
 
@@ -635,5 +636,7 @@ Outputs:
     Value: !GetAtt SchedulerSecurityGroup.GroupId
   ComputeNodeSecurityGroup:
     Value: !GetAtt ComputeNodeSecurityGroup.GroupId
+  ApplicationLBSecurityGroup:
+    Value: !GetAtt ApplicationLBSecurityGroup.GroupId
   LambdaACMIAMRoleArn:
     Value: !GetAtt LambdaACMIAMRole.Arn
