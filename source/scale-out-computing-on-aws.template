@@ -74,7 +74,7 @@ Parameters:
       "rhel7",
       "amazonlinux2",
     ]
-    "Default": "amazonlinux2"
+    "Default": "centos7"
     "Description": IMPORTANT CENTOS USERS > You MUST subscribe to https://aws.amazon.com/marketplace/pp/B00O7WM7QW first if using CentOS
 
   VpcCidr:
@@ -122,7 +122,7 @@ Parameters:
   Repository:
     Type: String
     Default: vde-yum-repository.s3-website-us-west-2.amazonaws.com
-    Description: Please enter hostname only, don't include http.
+    Description: Please enter FQDN only, don't include http.
 
   DeploymentType:
     Type: String
