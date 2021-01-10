@@ -364,6 +364,7 @@ echo export "SOCA_INSTALL_BUCKET_FOLDER="''' + str(soca_configuration['S3Install
 echo export "SOCA_INSTANCE_TYPE=$GET_INSTANCE_TYPE" >> /etc/environment
 echo export "SOCA_HOST_SYSTEM_LOG="/apps/soca/''' + str(soca_configuration['ClusterId']) + '''/cluster_node_bootstrap/logs/desktop/''' + str(session["user"]) + '''/''' + session_name + '''/$(hostname -s)"" >> /etc/environment
 echo export "AWS_DEFAULT_REGION="'''+region+'''"" >> /etc/environment
+echo export "REPOSITORY="''' + repository + '''"" >> /etc/environment
 echo export "SOCA_FSX_LUSTRE_FILE_SYSTEM_ID="''' + soca_configuration["FSxLustreFileSystemId"] + '''"" >> /etc/environment
 echo export "SOCA_FSX_LUSTRE_MOUNT_NAME="''' + soca_configuration["FSxLustreMountName"] + '''"" >> /etc/environment
 
@@ -423,7 +424,11 @@ systemctl enable chronyd
 # Prepare  Log folder
 mkdir -p $SOCA_HOST_SYSTEM_LOG
 echo "@reboot /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/ComputeNodePostReboot.sh >> $SOCA_HOST_SYSTEM_LOG/ComputeNodePostReboot.log 2>&1" | crontab -
-$AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.cfg /root/
+$AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.cfg /root
+
+# Replace repository FQDN
+sed -i "s/repository-fqdn/$REPOSITORY/g" /root/config.cfg
+
 /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/ComputeNode.sh ''' + soca_configuration['SchedulerPrivateDnsName'] + ''' >> $SOCA_HOST_SYSTEM_LOG/ComputeNode.sh.log 2>&1'''
 
 

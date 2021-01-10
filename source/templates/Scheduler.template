@@ -179,6 +179,10 @@ Resources:
             AWS=$(which aws)
             echo "@reboot $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/SchedulerPostReboot.sh /root && /bin/bash /root/SchedulerPostReboot.sh ${S3Bucket} ${S3InstallFolder} ${UserName} '${UserPassword}' >> /root/PostRebootConfig.log 2>&1" | crontab -
             $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/config.cfg /root/
+
+            # Replace repository FQDN
+            sed -i "s/repository-fqdn/$REPOSITORY/g" /root/config.cfg
+
             $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/requirements.txt /root/
             $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/Scheduler.sh /root/
             /bin/bash /root/Scheduler.sh ${EFSDataDns} ${EFSAppsDns} >> /root/Scheduler.sh.log 2>&1

@@ -12,9 +12,18 @@ fi
 service pbs stop
 
 # Install SSM
-yum install -y $SSM_URL
+yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazon-ssm-$AWS_DEFAULT_REGION/latest/linux_amd64/amazon-ssm-agent.rpm
 systemctl enable amazon-ssm-agent
 systemctl restart amazon-ssm-agent
+
+# Install CloudWatch Agent
+if [[ $SOCA_BASE_OS == "centos7" ]]; then
+    yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazoncloudwatch-agent-$AWS_DEFAULT_REGION/centos/amd64/latest/amazon-cloudwatch-agent.rpm
+elif [[ $SOCA_BASE_OS == "rhel7" ]]; then
+    yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazoncloudwatch-agent-$AWS_DEFAULT_REGION/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
+else # Amazon Linux 2
+    yum install -y amazon-cloudwatch-agent
+fi
 
 SCHEDULER_HOSTNAME=$1
 AWS=$(which aws)
