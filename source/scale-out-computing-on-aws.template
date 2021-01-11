@@ -437,7 +437,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        ApplicationLBSecurityGroup: !GetAtt Security.Outputs.ApplicationLBSecurityGroup
+        LoadBalancerSecurityGroup: !GetAtt Security.Outputs.LoadBalancerSecurityGroup
         PublicSubnet1: !GetAtt Network.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt Network.Outputs.PublicSubnet2
         PublicSubnet3: !GetAtt Network.Outputs.PublicSubnet3
@@ -518,3 +518,5 @@ Outputs:
     Value: !FindInMap [ Info, Data, Version ]
   Repository:
     Value: !Ref Repository
+  AcceleratorDNS:
+    Value: !GetAtt Viewer.Outputs.AcceleratorDNS

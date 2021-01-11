@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: (SOCA) - Manage DCV sessions.
 Parameters:
-  ApplicationLBSecurityGroup:
+  LoadBalancerSecurityGroup:
     Type: String
 
   VpcId:
@@ -166,7 +166,7 @@ Resources:
           Value: true
 
       SecurityGroups:
-        - !Ref ApplicationLBSecurityGroup
+        - !Ref LoadBalancerSecurityGroup
       Subnets:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2

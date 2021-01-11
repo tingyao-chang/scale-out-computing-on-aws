@@ -25,6 +25,9 @@ else # Amazon Linux 2
     yum install -y amazon-cloudwatch-agent
 fi
 
+# Start the CloudWatch Agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/amazon-cloudwatch-agent.json
+
 SCHEDULER_HOSTNAME=$1
 AWS=$(which aws)
 

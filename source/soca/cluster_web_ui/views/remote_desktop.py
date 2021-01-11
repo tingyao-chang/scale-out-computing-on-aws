@@ -432,7 +432,6 @@ sed -i "s/repository-fqdn/$REPOSITORY/g" /root/config.cfg
 /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/ComputeNode.sh ''' + soca_configuration['SchedulerPrivateDnsName'] + ''' >> $SOCA_HOST_SYSTEM_LOG/ComputeNode.sh.log 2>&1'''
 
 
-
     check_hibernation_support = client_ec2.describe_instance_types(
         InstanceTypes=[instance_type],
         Filters=[

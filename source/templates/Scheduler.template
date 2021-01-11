@@ -183,6 +183,9 @@ Resources:
             # Replace repository FQDN
             sed -i "s/repository-fqdn/$REPOSITORY/g" /root/config.cfg
 
+            # CloudWatch Agent Configuration
+            $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/amazon-cloudwatch-agent.json /root/
+
             $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/requirements.txt /root/
             $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/Scheduler.sh /root/
             /bin/bash /root/Scheduler.sh ${EFSDataDns} ${EFSAppsDns} >> /root/Scheduler.sh.log 2>&1

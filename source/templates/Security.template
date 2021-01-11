@@ -65,14 +65,14 @@ Resources:
         - Key: soca:ClusterId
           Value: !Ref ClusterId
 
-  ApplicationLBSecurityGroup:
+  LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId: !Ref VpcId
       GroupDescription: SG For Application Load Balancer
       Tags:
         - Key: Name
-          Value: !Sub ${ClusterId}-ApplicationLBSG
+          Value: !Sub ${ClusterId}-LoadBalancerSG
         - Key: soca:ClusterId
           Value: !Ref ClusterId
 
@@ -104,34 +104,34 @@ Resources:
       GroupId: !Ref ComputeNodeSecurityGroup
       Description: "Allow ALL traffic for ComputeNode and EFA"
 
-  ApplicationLBInboundRuleAllowClientIPHTTP:
+  LoadBalancerInboundRuleAllowClientIPHTTP:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       IpProtocol: tcp
       FromPort: 80
       ToPort: 80
       CidrIp: !Ref ClientIp
-      GroupId: !GetAtt ApplicationLBSecurityGroup.GroupId
+      GroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       Description: "Allow HTTP traffic from client IP to ELB"
 
-  ApplicationLBInboundRuleAllowClientIPHTTPS:
+  LoadBalancerInboundRuleAllowClientIPHTTPS:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       IpProtocol: tcp
       FromPort: 443
       ToPort: 443
       CidrIp: !Ref ClientIp
-      GroupId: !GetAtt ApplicationLBSecurityGroup.GroupId
+      GroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       Description: "Allow HTTPS traffic from client IP to ELB"
 
-  ApplicationLBInboundRuleAllowSchedulerIPHTTPS:
+  LoadBalancerInboundRuleAllowSchedulerIPHTTPS:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       IpProtocol: tcp
       FromPort: 443
       ToPort: 443
       CidrIp: !Join [ "", [ !Ref SchedulerPublicIP, "/32" ] ]
-      GroupId: !GetAtt ApplicationLBSecurityGroup.GroupId
+      GroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       Description: "Allow HTTPS traffic from Scheduler IP to ELB to validate DCV sessions"
 
   ComputeNodeOutboundItself:
@@ -168,7 +168,7 @@ Resources:
       IpProtocol: tcp
       FromPort: 8443
       ToPort: 8443
-      SourceSecurityGroupId: !GetAtt ApplicationLBSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       GroupId: !Ref SchedulerSecurityGroup
       Description: "Allow ELB healtcheck to communicate with web ui on master host"
 
@@ -196,6 +196,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore # Support for SSM
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy # Support for CloudWatch Agent
       Policies:
         - PolicyName: ComputeNodePermissions
           PolicyDocument:
@@ -323,6 +324,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore # Support for SSM
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy # Support for CloudWatch Agent
       Policies:
         - PolicyName: SchedulerReadPermissions
           PolicyDocument:
@@ -636,7 +638,7 @@ Outputs:
     Value: !GetAtt SchedulerSecurityGroup.GroupId
   ComputeNodeSecurityGroup:
     Value: !GetAtt ComputeNodeSecurityGroup.GroupId
-  ApplicationLBSecurityGroup:
-    Value: !GetAtt ApplicationLBSecurityGroup.GroupId
+  LoadBalancerSecurityGroup:
+    Value: !GetAtt LoadBalancerSecurityGroup.GroupId
   LambdaACMIAMRoleArn:
     Value: !GetAtt LambdaACMIAMRole.Arn

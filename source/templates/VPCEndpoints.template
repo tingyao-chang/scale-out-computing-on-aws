@@ -79,7 +79,20 @@ Resources:
         - !Ref SubnetId
       VpcEndpointType: Interface
       VpcId: !Ref VpcId
-  
+
+  CloudWatchLogsVPCEndpoint:
+  Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
+      SubnetIds:
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
   SecretManagerVPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties: 

@@ -22,6 +22,9 @@ else # Amazon Linux 2
     yum install -y amazon-cloudwatch-agent
 fi
 
+# Start the CloudWatch Agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/root/amazon-cloudwatch-agent.json
+
 mkdir -p /apps/soca/$SOCA_CONFIGURATION
 EFS_DATA=$1
 EFS_APPS=$2
