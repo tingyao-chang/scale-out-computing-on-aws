@@ -61,7 +61,7 @@ Resources:
         - !Ref SchedulerSecurityGroup
         - !Ref ComputeNodeSecurityGroup
 
-  AppsaMountTarget2:
+  AppsMountTarget2:
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId: !Ref EFSApps

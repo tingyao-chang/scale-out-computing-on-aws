@@ -81,7 +81,7 @@ Resources:
       VpcId: !Ref VpcId
 
   CloudWatchLogsVPCEndpoint:
-  Type: AWS::EC2::VPCEndpoint
+    Type: AWS::EC2::VPCEndpoint
     Properties:
       PrivateDnsEnabled: True
       SecurityGroupIds:
