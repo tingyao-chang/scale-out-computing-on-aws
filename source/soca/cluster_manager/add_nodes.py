@@ -623,6 +623,10 @@ def main(**kwargs):
                 'Key': None,
                 'Default': aligo_configuration['EFSDataDns'],
             },
+            'EFSPDKDns': {
+                'Key': None,
+                'Default': aligo_configuration['EFSPDKDns'],
+            },
             'ESDomainEndpoint': {
                 'Key': None,
                 'Default': aligo_configuration['ESDomainEndpoint'],

@@ -237,6 +237,7 @@ Resources:
       "ComputeNodeInstanceProfileArn": "${ComputeNodeInstanceProfileArn}",
       "EFSDataDns": "${EFSDataDns}",
       "EFSAppsDns": "${EFSAppsDns}",
+      "EFSPDKDns": "${EFSPDKDns}",
       "ClusterId": "${ClusterId}",
       "Version": "${Version}",
       "S3Bucket": "${S3Bucket}",

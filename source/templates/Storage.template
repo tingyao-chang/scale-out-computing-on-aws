@@ -121,6 +121,48 @@ Resources:
         - !Ref SchedulerSecurityGroup
         - !Ref ComputeNodeSecurityGroup
 
+  EFSPDK:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: True
+      LifecyclePolicies:
+         - TransitionToIA: AFTER_30_DAYS
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${ClusterId}-EFSPDK
+        - Key: soca:ClusterId
+          Value: !Ref ClusterId
+        - Key: soca:BackupPlan
+          Value: !Sub ${ClusterId}
+      ThroughputMode: bursting
+
+  PDKMountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSPDK
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroups:
+        - !Ref SchedulerSecurityGroup
+        - !Ref ComputeNodeSecurityGroup
+
+  PDKMountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSPDK
+      SubnetId: !Ref PrivateSubnet2
+      SecurityGroups:
+        - !Ref SchedulerSecurityGroup
+        - !Ref ComputeNodeSecurityGroup
+
+  PDKMountTarget3:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSPDK
+      SubnetId: !Ref PrivateSubnet3
+      SecurityGroups:
+        - !Ref SchedulerSecurityGroup
+        - !Ref ComputeNodeSecurityGroup
+
   SNSEFSTopic:
     Metadata:
       cfn_nag:
@@ -353,6 +395,12 @@ Outputs:
 
   EFSDataDns:
     Value: !Join [ ".", [ !Ref EFSData, 'efs', !Ref "AWS::Region", !Ref "AWS::URLSuffix"] ]
+
+  EFSPDK:
+    Value: !Ref EFSPDK
+
+  EFSPDKDns:
+    Value: !Join [ ".", [ !Ref EFSPDK, 'efs', !Ref "AWS::Region", !Ref "AWS::URLSuffix"] ]
 
   EFSMountParameters:
     Value: 'nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport'

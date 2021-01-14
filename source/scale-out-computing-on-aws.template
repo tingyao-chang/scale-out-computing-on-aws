@@ -478,6 +478,7 @@ Resources:
         PrivateSubnet3: !GetAtt Network.Outputs.PrivateSubnet3
         EFSDataDns: !GetAtt Storage.Outputs.EFSDataDns
         EFSAppsDns: !GetAtt Storage.Outputs.EFSAppsDns
+        EFSPDKDns: !GetAtt Storage.Outputs.EFSPDKDns
         S3InstallFolder: !Ref S3InstallFolder
         Version: !FindInMap [ Info, Data, Version ]
         S3Bucket: !Ref S3InstallBucket

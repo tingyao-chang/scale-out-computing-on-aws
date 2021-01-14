@@ -148,10 +148,11 @@ echo "''' + params['JobOwner'] + ''' ALL=(ALL) /bin/yum" >> /etc/sudoers
 
 mkdir -p /apps
 mkdir -p /data
-
+mkdir -p /pdk
 # Mount EFS
 echo "''' + params['EFSDataDns'] + ''':/ /data nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
 echo "''' + params['EFSAppsDns'] + ''':/ /apps nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
+echo "''' + params['EFSPDKDns'] + ''':/ /pdk nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
 EFS_MOUNT=0
 mount -a 
 while [[ $? -ne 0 ]] && [[ $EFS_MOUNT -lt 5 ]]
