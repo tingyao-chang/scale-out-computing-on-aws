@@ -379,7 +379,7 @@ echo export "SOCA_FSX_LUSTRE_FILE_SYSTEM_ID="''' + soca_configuration["FSxLustre
 echo export "SOCA_FSX_LUSTRE_MOUNT_NAME="''' + soca_configuration["FSxLustreMountName"] + '''"" >> /etc/environment
 
 # Add scratch storage for Desktop
-echo export "SOCA_SCRATCH_SIZE='''+scratch_size+'''" >> /etc/environment
+echo export "SOCA_SCRATCH_SIZE='''+str(scratch_size)+'''" >> /etc/environment
 
 source /etc/environment
 AWS=$(which aws)
