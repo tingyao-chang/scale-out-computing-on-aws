@@ -40,7 +40,14 @@ def main(**launch_parameters):
                                              'VolumeSize': 30 if launch_parameters["disk_size"] is False else int(launch_parameters["disk_size"]),
                                              'VolumeType': 'gp3',
                                              'Encrypted': True}
-                                         }]
+                                        },
+                                        {'DeviceName': "/dev/xvdb" if launch_parameters["base_os"] == "amazonlinux2" else "/dev/sdf",
+                                         'Ebs': {
+                                             'DeleteOnTermination': True,
+                                             'VolumeSize': int(launch_parameters["scratch_size"]),
+                                             'VolumeType': 'gp3',
+                                             'Encrypted': True}
+                                        }]
         instance.ImageId = launch_parameters["image_id"]
         instance.SecurityGroupIds = [launch_parameters["security_group_id"]]
         if launch_parameters["hibernate"] is True:

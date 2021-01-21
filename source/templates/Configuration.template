@@ -49,6 +49,9 @@ Parameters:
   EFSDataDns:
     Type: String
 
+  EFSPDKDns:
+    Type: String
+
   ClusterId:
     Type: String
 

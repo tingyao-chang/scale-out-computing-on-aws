@@ -45,7 +45,7 @@ fi
 yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]})
 
 # Configure Scratch Directory if specified by the user
-mkdir /scratch/
+#mkdir /scratch/
 if [[ $SOCA_SCRATCH_SIZE -ne 0 ]];
 then
     LIST_ALL_DISKS=$(lsblk --list | grep disk | awk '{print $1}')
@@ -58,7 +58,9 @@ then
 	    then
 	        echo "Detected /dev/$disk with no partition as scratch device"
 		    mkfs -t ext4 /dev/$disk
-            echo "/dev/$disk /scratch ext4 defaults 0 0" >> /etc/fstab
+            # change /scratch to /tmp
+            systemctl unmask tmp.mount
+            echo "/dev/$disk /tmp ext4 defaults 0 0" >> /etc/fstab
 	    fi
     done
 else
@@ -98,7 +100,9 @@ else
 	        # If only 1 instance store, mfks as ext4
 	        echo "Detected  1 NVMe device available, formatting as ext4 .."
 	        mkfs -t ext4 $VOLUME_LIST
-	        echo "$VOLUME_LIST /scratch ext4 defaults 0 0" >> /etc/fstab
+	        # change /scratch to /tmp
+	        systemctl unmask tmp.mount
+	        echo "$VOLUME_LIST /tmp ext4 defaults 0 0" >> /etc/fstab
 	    elif [[ $VOLUME_COUNT -gt 1 ]];
 	    then
 	        # if more than 1 instance store disks, raid them !
@@ -108,7 +112,9 @@ else
             echo yes | mdadm --create -f --verbose --level=0 --raid-devices=$VOLUME_COUNT /dev/$DEVICE_NAME ${VOLUME_LIST[@]}
             mkfs -t ext4 /dev/$DEVICE_NAME
             mdadm --detail --scan | tee -a /etc/mdadm.conf
-            echo "/dev/$DEVICE_NAME /scratch ext4 defaults 0 0" >> /etc/fstab
+            # change /scratch to /tmp
+            systemctl unmask tmp.mount
+            echo "/dev/$DEVICE_NAME /tmp ext4 defaults 0 0" >> /etc/fstab
         else
             echo "All volumes detected already have a partition or mount point and can't be used as scratch devices"
 	    fi

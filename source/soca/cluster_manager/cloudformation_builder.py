@@ -67,7 +67,7 @@ def main(**params):
 export PATH=$PATH:/usr/local/bin
 if [[ "''' + params['BaseOS'] + '''" == "centos7" ]] || [[ "''' + params['BaseOS'] + '''" == "rhel7" ]];
 then
-     mv /etc/yum.repos.d/CentOS-* /tmp
+     mv /etc/yum.repos.d/* /tmp
      echo "[base]" >> /etc/yum.repos.d/private.repo
      echo "name=CentOS-7 - Base" >> /etc/yum.repos.d/private.repo
      echo "baseurl=http://'''+ params['Repository'] + '''/base" >> /etc/yum.repos.d/private.repo
