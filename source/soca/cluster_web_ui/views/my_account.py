@@ -62,6 +62,7 @@ def manage_group():
 @my_account.route("/reset_password", methods=["POST"])
 @login_required
 def reset_key():
+    old_password = request.form.get("old_password", None)
     password = request.form.get("password", None)
     password_verif = request.form.get("password_verif", None)
     admin_reset = request.form.get("admin_reset", None)
@@ -74,12 +75,13 @@ def reset_key():
             flash("You can not reset your own password using this tool. Please visit 'My Account' section for that", "error")
             return redirect("/admin/users")
         else:
-            password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(8))
+            password = ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for i in range(12))
             change_password = post(config.Config.FLASK_ENDPOINT + '/api/user/reset_password',
                                        headers={"X-SOCA-TOKEN": session["api_key"],
                                                 "X-SOCA-USER": session["user"]},
                                        data={"user": user,
-                                             "password": password},
+                                             "password": password,
+                                             "admin_reset": admin_reset},
                                        verify=False)
             if change_password.status_code == 200:
                 flash("Password for " + user + " has been changed to " + password + "<hr> User is recommended to change it using 'My Account' section", "success")
@@ -95,7 +97,8 @@ def reset_key():
                                        headers={"X-SOCA-TOKEN": config.Config.API_ROOT_KEY,
                                                 "X-SOCA-USER": session["user"]},
                                        data={"user": session["user"],
-                                             "password": password},
+                                             "password": password,
+                                             "old_password": old_password},
                                        verify=False)
 
                 if change_password.status_code == 200:
