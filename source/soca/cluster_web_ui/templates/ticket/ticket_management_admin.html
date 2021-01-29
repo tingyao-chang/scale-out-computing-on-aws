@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+     {% include 'common/header.html' %}
+
+
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    {% include 'common/vertical_menu_bar.html' %}
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+          <br>
+          <div class="container-fluid">
+              {% include 'common/horizontal_menu_bar.html' %}
+              <main role="main">
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <br>
+                                {% if category == "success" %}
+                                <div class="alert alert-success">
+                                    <strong>{{ message | safe }} </strong>
+                                </div>
+                                {% elif category == "info" %}
+                                 <div class="alert alert-info">
+                                    <strong>{{ message | safe }} </strong>
+                                </div>
+                                {% else %}
+                                 <div class="alert alert-danger">
+                                    <strong>{{ message | safe }} </strong>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+              <div class="col-md-12">
+                  <div class="card shadow mb-4">
+                              <div class="card-header py-3">
+                                  <h6 class="m-0 font-weight-bold text-primary">Ticket management system</h6>
+                              </div>
+                              <div class="card-body">
+                              {%  if not ticket_infos %}
+			      {%  if not closed_ticket_infos %}
+                                  You don't have any tickets.
+                              {% else %}
+
+			{% for ticket in ticket_infos %}
+                        <div class="tab-pane fade show active" id="nav-add" role="tabpanel"
+                             aria-labelledby="nav-home-tab">
+                            <br>
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+					<h6 class="m-0 font-weight-bold text-primary">Manage support ticket {{ ticket['id'] }}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/ticket/ticket_management_admin/update" method="post">
+					<div class="form-group">
+                                            <label for="ticket_id" data-toggle="tooltip" data-placement="top" title="Ticket ID">Ticket ID</label>
+                                            <input id="ticket_id" placeholder="1234567" value="{{ ticket['id'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_id" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+					<div class="form-group">
+                                            <label for="ticket_username" data-toggle="tooltip" data-placement="top" title="Username">Username</label>
+                                            <input id="ticket_username" placeholder="ty" value="{{ ticket['username'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_username" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+					<div class="form-group">
+                                            <label for="ticket_status" data-toggle="tooltip" data-placement="top" title="Ticket Status">Ticket Status</label>
+                                            <input id="ticket_status" placeholder="working" value="{{ ticket['status'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_status" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_type" data-toggle="tooltip" data-placement="top" title="Ticket type">Type</label>
+					    <input id="ticket_type" placeholder="Issue" value="{{ ticket['type'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_type" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_title" data-toggle="tooltip" data-placement="top" title="Describe your issue">Title</label>
+					    <input id="ticket_title" placeholder="Describe your issue..." value="{{ ticket['title'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_title" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_catalog" data-toggle="tooltip" data-placement="top" title="Select issue catalog" >Catalog</label>
+					    <input id="ticket_catalog" placeholder="Ticket catalog" value="{{ ticket['catalog'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_catalog" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                         <div class="form-group">
+                                            <label data-toggle="tooltip" data-placement="top" title="Severity levels for issue" for="ticket_severity">Severity</label>
+					    <input id="ticket_severity" placeholder="Ticket severity" value="{{ ticket['severity'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_severity" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label for="ticket_desc" data-toggle="tooltip" data-placement="top" title="Description issue with detailed information" >Description</label>
+                                            <input id="ticket_desc" placeholder="Issue description" value="{{ ticket['description'] }}"
+                                                   class="form-control" type="text"
+                                                   required name="ticket_desc" readonly>
+                                        </div>
+
+					<div class="form-group">
+                                            <label for="ticket_update" data-toggle="tooltip" data-placement="top" title="Update status for this ticket" >Status Update</label>
+                                            <input id="ticket_update" placeholder="Update ticket status by system admin"
+                                                   class="form-control" type="text"
+                                                   required name="ticket_update">
+                                        </div>
+
+                                        <div align="justify">
+                                            <input type="hidden" name="csrf_token"
+                                                   value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-primary btn-lg">Update Ticket
+
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+			{% endfor %}
+
+				     <h6 class="m-0 font-weight-bold text-primary">Open Ticket</h6>
+                                     <table class="table table-striped">
+                                      <thead>
+                                        <tr>
+                                          <th scope="col">Ticket Id</th>
+                                            <th>User Name</th>
+                                            <th>Catalog</th>
+                                            <th>Status</th>
+                                            <th>Title</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+				      {% for ticket in ticket_infos %}
+                                           <tr>
+                                          <th>{{ ticket['id'] }}</th>
+                                          <th>{{ ticket['username'] }}</th>
+                                          <th>{{ ticket['catalog'] }}</th>
+                                          <th>{{ ticket['status'] }}</th>
+                                          <th>{{ ticket['title'] }}</th>
+                                           <th>
+                                               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ticket{{ ticket['id'] }}">Ticket Info</button>
+                                               <button type="button" class="btn btn-success" data-toggle="modal" data-target="#close{{ ticket['id'] }}">Close Successfully</button>
+                                               <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#closefailed{{ ticket['id'] }}">Close Unsuccessfully</button>
+                                           </th>
+                                           </tr>
+                                          <!-- Modal Close -->
+                                          <div class="modal fade" id="close{{ ticket['id'] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                              <div class="modal-dialog" role="document">
+                                                  <div class="modal-content">
+                                                      <div class="modal-header">
+                                                          <h5 class="modal-title">Confirming</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                      </div>
+                                                      <div class="modal-body container">
+                                                          <div class="alert alert-success">
+                                                              <strong>Attention</strong> <br>
+                                                              You are about to close this ticket. User has to open new ticket if they need support. This action cannot be reversed.
+                                                          </div>
+                                                            <a href="/ticket/ticket_management_admin/close?ticket_id={{ ticket['id'] }}&ticket_username={{ ticket['username'] }}">
+                                                                <button type="button" class="btn btn-success form-control">Close ticket {{ ticket['id'] }}</button>
+                                                            </a>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- End -->
+					  <!-- Modal Close Unsuccessfully-->
+                                          <div class="modal fade" id="closefailed{{ ticket['id'] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                              <div class="modal-dialog" role="document">
+                                                  <div class="modal-content">
+                                                      <div class="modal-header">
+                                                          <h5 class="modal-title">Entering the Danger Zone</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                      </div>
+                                                      <div class="modal-body container">
+                                                          <div class="alert alert-danger">
+                                                              <strong>Attention</strong> <br>
+                                                              You are about to close this ticket. User has to open new ticket if they need support. This action cannot be reversed.
+                                                          </div>
+                                                            <a href="/ticket/ticket_management_admin/closefailed?ticket_id={{ ticket['id'] }}&ticket_username={{ ticket['username'] }}">
+                                                                <button type="button" class="btn btn-danger form-control">Close ticket {{ ticket['id'] }}</button>
+                                                            </a>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- End -->
+                                          <!-- Modal Info -->
+                                          <div class="modal fade" id="ticket{{ ticket['id'] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                              <div class="modal-dialog modal-lg" role="document">
+                                                  <div class="modal-content modal-lg">
+                                                      <div class="modal-header">
+                                                          <h5 class="modal-title">Ticket {{ ticket['id'] }}</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                      </div>
+                                                      <div class="modal-body container">
+                                                          <strong>{{ ticket }}</strong>: hello<br>
+                                                          </div>
+                                                          <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                          </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- End -->
+					  {% endfor %}
+
+
+                                      </tbody>
+				    </table>
+				  {% if closed_ticket_infos %}
+				    <h6 class="m-0 font-weight-bold text-primary">Closed Ticket</h6>
+				    <table class="table table-striped">
+                                      <thead>
+                                        <tr>
+                                          <th scope="col">Ticket Id</th>
+                                            <th>User Name</th>
+                                            <th>Catalog</th>
+                                            <th>Status</th>
+                                            <th>Title</th>
+                                        </tr>
+                                      </thead>
+				      <tbody>
+                                      {% for closed_ticket in closed_ticket_infos %}
+                                           <tr>
+                                          <th>{{ closed_ticket['id'] }}</th>
+                                          <th>{{ closed_ticket['username'] }}</th>
+                                          <th>{{ closed_ticket['catalog'] }}</th>
+                                          <th>{{ closed_ticket['status'] }}</th>
+                                          <th>{{ closed_ticket['title'] }}</th>
+				      {% endfor %}
+                                      </tbody>
+                                    </table>
+				  {% endif %}
+                              {%  endif %}
+                              {%  endif %}
+
+
+
+
+                              </div>
+                          </div>
+              </div>
+
+              </main>
+              </div>
+          </div>
+      </div>
+
+  </div>
+
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+  {% include 'common/footer.html' %}
+
+
+
+</body>
+
+</html>
