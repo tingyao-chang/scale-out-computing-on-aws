@@ -26,6 +26,16 @@ def get_ticket_info():
     )
     return response['Items']
 
+def get_closed_ticket_info():
+    closed_ticket_info = {}
+    ddb = config.Config.TICKET_DDB
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(ddb)
+    response = table.scan(
+            FilterExpression=Attr('status').eq('Closed by system admin') |Attr('status').eq('Closed by system admin. Closure code unsuccessful') | Attr('status').eq('Closed by user') | Attr('status').eq('Rejected by super user')
+    )
+    return response['Items']
+
 def get_region():
     session = boto3.session.Session()
     aws_region = session.region_name
@@ -40,8 +50,9 @@ def get_user_name():
 @login_required
 def index():
     ticket_infos = get_ticket_info()
+    closed_ticket_infos = get_closed_ticket_info()
     user = session['user']
-    return render_template('ticket/support_center.html', user = user, region_name=get_region(), ticket_infos=ticket_infos)
+    return render_template('ticket/support_center.html', user = user, region_name=get_region(), ticket_infos=ticket_infos, closed_ticket_infos=closed_ticket_infos)
 
 
 @ticket_support_center.route('/ticket/support_center/create', methods=['POST'])
@@ -90,47 +101,74 @@ def ami_create():
         logger.info(f"Creating ticket id failed")
     return redirect('/ticket/support_center')
 
-
-@ticket_support_center.route('/ticket/support_center/close', methods=['POST'])
+@ticket_support_center.route("/ticket/support_center/update", methods=["POST"])
 @login_required
-def ticket_close():
-    ticket_type = request.form.get("ticket_type")
-    ticket_label = int(request.form.get("ticket_label"))
-    user_name = get_user_name()
-    logger.error(f"{user_name} {ticket_label} =========")
+def approve_ticket():
+    ticket_id = int(request.form.get("ticket_id"))
+    ticket_username = request.form.get("ticket_username")
+    ticket_update = request.form.get("ticket_update")
     aws_region = get_region()
-    timestamp = int(datetime.datetime.utcnow().strftime('%s'))
-    ec2_client = boto3.client('ec2', aws_region)
     sns_client = boto3.client('sns', aws_region)
     ddb = config.Config.TICKET_DDB
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(ddb)
     try:
         response = table.update_item(
-           Key={
-                'username': user_name,
-                'id': ticket_label
-           },
-           UpdateExpression="set #ts=:r",
-           ExpressionAttributeValues={
-                ':r': 'Closed by user'
-           },
-           ExpressionAttributeNames={
-                "#ts": "status"
-           },
-           ReturnValues = "ALL_NEW"
+            Key={
+                'username': ticket_username,
+                'id': ticket_id
+            },
+            UpdateExpression="set #u=:u",
+            ExpressionAttributeValues={
+                ':u': ticket_update
+            },
+            ExpressionAttributeNames={
+                "#u": "userupdate"
+            },
+            ReturnValues = "ALL_NEW"
         )
-        if config.Config.TICKET_SNS_NOTIFICATION is True:
-            sns_message = "User " + user_name + " close a SOCA ticket, Title ID:" + str(ticket_label)
-            # Publish a simple message to the specified SNS topic
-            response = sns_client.publish(
-                TopicArn=config.Config.TICKET_SNS_TOPIC_ARN,
-                Message=sns_message,
-            )
-        flash(f"Close ticket successfully in SOCA", "success")
-        logger.info(f"Closing ticket id, {ticket_label}")
+        flash(f"Update ticket successfully in SOCA", "success")
+        logger.info(f"Update ticket id, {ticket_id}")
     except:
-        flash(f"Close ticket failed in SOCA. Contact system admin", "error")
-    return redirect('/ticket/support_center')
+        flash(f"Update ticket in SOCA failed", "error")
+        logger.error(f"Update ticket id, {ticket_id} failed")
+    return redirect("/ticket/support_center")
 
+@ticket_support_center.route("/ticket/support_center/close", methods=["GET"])
+@login_required
+def delete_job():
+    ticket_id = int(request.args.get("ticket_id", False))
+    if ticket_id is False:
+        return redirect("/ticket/support_center")
+
+    ticket_username = request.args.get("ticket_username", False)
+    if ticket_username is False:
+        return redirect("/ticket/support_center")
+
+    aws_region = get_region()
+    sns_client = boto3.client('sns', aws_region)
+    ddb = config.Config.TICKET_DDB
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(ddb)
+    try:
+        response = table.update_item(
+            Key={
+                'username': ticket_username,
+                'id': ticket_id
+            },
+            UpdateExpression="set #ts=:r",
+            ExpressionAttributeValues={
+                ':r': 'Closed by user'
+            },
+            ExpressionAttributeNames={
+                "#ts": "status"
+            },
+            ReturnValues = "ALL_NEW"
+        )
+        flash(f"Close ticket in SOCA", "success")
+        logger.info(f"Close ticket id, {ticket_id}")
+    except:
+        flash(f"Close ticket in SOCA failed", "error")
+        logger.error(f"Close ticket id, {ticket_id} failed")
+    return redirect("/ticket/support_center")
 
