@@ -43,8 +43,7 @@
                               </div>
                               <div class="card-body">
                               {%  if not ticket_infos %}
-			      {%  if not closed_ticket_infos %}
-                                  You don't have any tickets.
+                                  You don't have any open tickets.
                               {% else %}
 
 			{% for ticket in ticket_infos %}
@@ -231,8 +230,11 @@
 
                                       </tbody>
 				    </table>
-				  {% if closed_ticket_infos %}
+				  {%  endif %}
 				    <h6 class="m-0 font-weight-bold text-primary">Closed Ticket</h6>
+				  {% if not closed_ticket_infos %}
+                                    You don't have any closed tickets.
+                                  {% else %}
 				    <table class="table table-striped">
                                       <thead>
                                         <tr>
@@ -255,8 +257,6 @@
                                       </tbody>
                                     </table>
 				  {% endif %}
-                              {%  endif %}
-                              {%  endif %}
 
 
 
