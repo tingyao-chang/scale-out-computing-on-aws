@@ -4,7 +4,7 @@ import boto3
 import config
 from flask import render_template, Blueprint, request, redirect, session, flash
 from requests import get, delete
-from decorators import login_required, admin_only
+from decorators import login_required, admin_only, reviewer_only
 from boto3.dynamodb.conditions import Key, Attr
 
 logger = logging.getLogger("application")
@@ -28,7 +28,7 @@ def get_ticket_info():
 
 @ticket_ticket_management.route("/ticket/ticket_management/", methods=["GET"])
 @login_required
-@admin_only
+@reviewer_only
 def index():
     try:
         ticket_infos = get_ticket_info()
@@ -40,7 +40,7 @@ def index():
 
 @ticket_ticket_management.route("/ticket/ticket_management/approve", methods=["GET"])
 @login_required
-@admin_only
+@reviewer_only
 def approve_ticket():
     ticket_id = int(request.args.get("ticket_id", False))
     if ticket_id is False:
