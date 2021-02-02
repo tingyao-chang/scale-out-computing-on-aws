@@ -28,10 +28,12 @@ def get_ticket_info():
 
 def get_closed_ticket_info():
     closed_ticket_info = {}
+    username = get_user_name()
     ddb = config.Config.TICKET_DDB
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table(ddb)
-    response = table.scan(
+    response = table.query(
+            KeyConditionExpression=Key('username').eq(username),
             FilterExpression=Attr('status').eq('Closed by system admin') |Attr('status').eq('Closed by system admin. Closure code unsuccessful') | Attr('status').eq('Closed by user') | Attr('status').eq('Rejected by super user')
     )
     return response['Items']
