@@ -361,7 +361,7 @@
                                               {% endif %}
 
                                           {% elif session_data.session_state == 'running' %}
-                                              <h6>Option1: Browser access</h6>
+                                              <h6>Browser access</h6>
                                               <a target="_blank" href="{{ session_data.url }}?authToken={{ session_data.session_authentication_token }}#{{ session_data.session_id }}" class="btn btn-success btn-icon-split">
                                                   <span class="icon text-white-50">
                                                       <i class="fas fa-check"></i>
@@ -369,16 +369,6 @@
                                                   <span class="text">Open Session directly on a browser</span>
                                               </a>
                                               <br><br>
-                                              <h6>Option2: Use Native Application (best performance)</h6>
-                                              <div class="alert alert-primary" role="alert">
-                                                  Download your client <strong><a href="https://download.nice-dcv.com/" target="_blank"> here</a></strong>
-                                              </div>
-                                              <a target="_blank" href="/remote_desktop/client?session={{ n }}" class="btn btn-success btn-icon-split">
-                                                <span class="icon text-white-50">
-                                                  <i class="fas fa-check"></i>
-                                                </span>
-                                                <span class="text">Download Session File</span>
-                                              </a>
                                               {% if session_data.support_hibernation == true %}
                                                   {% if hibernate_idle_session > 0 %}
                                                       <hr> This session will be automatically hibernated <strong> after {{ hibernate_idle_session }} hours</strong> of idle time if you do not run it on a schedule.
@@ -502,14 +492,14 @@
                                       <div class="form-group row">
                                           <label for="disk_size" data-toggle="tooltip" data-placement="top" title="Select the size (in GB) of your main SSD disk used for / partition." class="col-sm-4 col-form-label">Storage Size</label>
                                           <div class="col-sm-8">
-                                            <input id="disk_size" value="10" min="10" class="form-control" type="number" name="disk_size">
+                                            <input id="disk_size" value="80" min="80" max="100" class="form-control" type="number" name="disk_size">
                                           </div>
                                       </div>
                                       <div class="form-group row">
                                           <label for="instance_ami" data-toggle="tooltip" data-placement="top" title="Specify an image with pre-installed applications" class="col-sm-4 col-form-label">Software Stack</label>
                                           <div class="col-sm-8">
                                               <select class="form-control" name='instance_ami' id="instance_ami">
-                                                  <option selected value="base">Base (No Software)</option>
+                                                  <option selected value="base">Base Image</option>
                                                     {% for ami_label, ami_info in ami_list.items() %}
                                                       <option value="{{ ami_info.ami_id }},{{ ami_info.ami_base_os }}">{{ ami_label }} ({{ ami_info.ami_id }})</option>
                                                   {% endfor %}
