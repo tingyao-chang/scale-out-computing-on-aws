@@ -123,5 +123,11 @@ class Config(object):
     # SSH
     SSH_PRIVATE_KEY_LOCATION = "tmp/ssh"
 
+    # TICKETING SYSTEM
+    TICKET_DDB = "<DynamoDB Table Name for Ticketing System>"
+    TICKET_SNS_TOPIC_ARN = "SNS Topic ARN for Super User"
+    TICKET_SNS_ADMIN_TOPIC_ARN = "SNS Topic ARN for System Admin"
+    TICKET_SNS_NOTIFICATION = False
+    TICKET_REVIEWER_GROUP = "reviewer"
 
 app_config = Config()

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+     {% include 'common/header.html' %}
+
+
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    {% include 'common/vertical_menu_bar.html' %}
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+          <br>
+          <div class="container-fluid">
+              {% include 'common/horizontal_menu_bar.html' %}
+              <main role="main">
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <br>
+                                {% if category == "success" %}
+                                <div class="alert alert-success">
+                                    <strong>{{ message | safe }} </strong>
+                                </div>
+                                {% elif category == "info" %}
+                                 <div class="alert alert-info">
+                                    <strong>{{ message | safe }} </strong>
+                                </div>
+                                {% else %}
+                                 <div class="alert alert-danger">
+                                    <strong>{{ message | safe }} </strong>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+              <div class="col-md-12">
+                  <div class="card shadow mb-4">
+                              <div class="card-header py-3">
+                                  <h6 class="m-0 font-weight-bold text-primary">Ticket management system</h6>
+                              </div>
+                              <div class="card-body">
+                              {%  if not ticket_infos %}
+                                  You don't have any ticket. 
+                              {% else %}
+
+                                     <table class="table table-striped">
+                                      <thead>
+                                        <tr>
+                                          <th scope="col">Ticket Id</th>
+                                            <th>User Name</th>
+                                            <th>Catalog</th>
+                                            <th>Status</th>
+                                            <th>Title</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+				      {% for ticket in ticket_infos %}
+                                           <tr>
+                                          <th>{{ ticket['id'] }}</th>
+                                          <th>{{ ticket['username'] }}</th>
+                                          <th>{{ ticket['catalog'] }}</th>
+                                          <th>{{ ticket['status'] }}</th>
+                                          <th>{{ ticket['title'] }}</th>
+                                           <th>
+                                               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ticket{{ ticket['id'] }}">Ticket Info</button>
+                                               <button type="button" class="btn btn-success" data-toggle="modal" data-target="#approve{{ ticket['id'] }}">Approve</button>
+                                               <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#close{{ ticket['id'] }}">Reject&Close</button>
+                                           </th>
+                                           </tr>
+                                          <!-- Modal Approve -->
+                                          <div class="modal fade" id="approve{{ ticket['id'] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                              <div class="modal-dialog" role="document">
+                                                  <div class="modal-content">
+                                                      <div class="modal-header">
+                                                          <h5 class="modal-title">Confirming</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                      </div>
+                                                      <div class="modal-body container">
+                                                          <div class="alert alert-success">
+                                                              <strong>Attention</strong> <br>
+                                                              You are about to approve this ticket. System admin will receive notification and follow-up this. 
+                                                          </div>
+                                                            <a href="/ticket/ticket_management/approve?ticket_id={{ ticket['id'] }}&ticket_username={{ ticket['username'] }}">
+                                                                <button type="button" class="btn btn-success form-control">Approve ticket {{ ticket['id'] }}</button>
+                                                            </a>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- End -->
+                                          <!-- Modal Close -->
+                                          <div class="modal fade" id="close{{ ticket['id'] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                              <div class="modal-dialog" role="document">
+                                                  <div class="modal-content">
+                                                      <div class="modal-header">
+                                                          <h5 class="modal-title">Entering the Danger Zone</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                      </div>
+                                                      <div class="modal-body container">
+                                                          <div class="alert alert-danger">
+                                                              <strong>Attention</strong> <br>
+                                                              You are about to reject and close this ticket. User has to open new ticket if they need support. This action cannot be reversed.
+                                                          </div>
+                                                            <a href="/ticket/ticket_management/reject?ticket_id={{ ticket['id'] }}&ticket_username={{ ticket['username'] }}">
+                                                                <button type="button" class="btn btn-danger form-control">Close ticket {{ ticket['id'] }}</button>
+                                                            </a>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- End -->
+                                          <!-- Modal Info -->
+                                          <div class="modal fade" id="ticket{{ ticket['id'] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                              <div class="modal-dialog modal-lg" role="document">
+                                                  <div class="modal-content modal-lg">
+                                                      <div class="modal-header">
+                                                          <h5 class="modal-title">Ticket {{ ticket['id'] }}</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                      </div>
+                                                      <div class="modal-body container">
+                                                          <strong>{{ ticket }}</strong>: hello<br>
+                                                          </div>
+                                                          <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                          </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- End -->
+					  {% endfor %}
+
+
+                                      </tbody>
+                                    </table>
+                              {%  endif %}
+
+
+
+
+                              </div>
+                          </div>
+              </div>
+
+              </main>
+              </div>
+          </div>
+      </div>
+
+  </div>
+
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+  {% include 'common/footer.html' %}
+
+
+
+</body>
+
+</html>
