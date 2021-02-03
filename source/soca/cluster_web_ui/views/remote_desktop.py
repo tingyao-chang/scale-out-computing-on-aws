@@ -50,14 +50,23 @@ def can_launch_instance(launch_parameters):
         client_ec2.run_instances(
             BlockDeviceMappings=[
                 {
-                    'DeviceName':  "/dev/xvda" if launch_parameters["base_os"] == "amazonlinux2" else "/dev/sda1",
+                    'DeviceName': "/dev/xvda" if launch_parameters["base_os"] == "amazonlinux2" else "/dev/sda1",
                     'Ebs': {
                         'DeleteOnTermination': True,
                         'VolumeSize': 30 if launch_parameters["disk_size"] is False else int(launch_parameters["disk_size"]),
-                        'VolumeType': 'gp2',
+                        'VolumeType': 'gp3',
                         'Encrypted': True
-                    },
+                    }
                 },
+                {
+                    'DeviceName': "/dev/xvdb" if launch_parameters["base_os"] == "amazonlinux2" else "/dev/sdf",
+                    'Ebs': {
+                        'DeleteOnTermination': True,
+                        'VolumeSize': int(launch_parameters["scratch_size"]),
+                        'VolumeType': 'gp3',
+                        'Encrypted': True
+                    }
+                }
             ],
             MaxCount=1,
             MinCount=1,
@@ -277,6 +286,8 @@ def create():
     soca_private_subnets = [soca_configuration["PrivateSubnet1"],
                             soca_configuration["PrivateSubnet2"],
                             soca_configuration["PrivateSubnet3"]]
+    repository = soca_configuration["Repository"]
+    scratch_size = 200
 
     # sanitize session_name, limit to 255 chars
     if parameters["session_name"] is False:
@@ -288,12 +299,8 @@ def create():
             session_name = 'LinuxDesktop' + str(parameters["session_number"])
 
     if parameters["instance_ami"] == "base":
-        if config.Config.DCV_LINUX_AMI != "":
-            image_id = config.Config.DCV_LINUX_AMI
-            base_os = config.Config.DCV_LINUX_BASE_OS
-        else:
-            image_id = soca_configuration["CustomAMI"]
-            base_os = read_secretmanager.get_soca_configuration()['BaseOS']
+        image_id = soca_configuration["CustomAMI"]
+        base_os = read_secretmanager.get_soca_configuration()['BaseOS']
     else:
         if len(parameters["instance_ami"].split(",")) != 2:
             flash("Invalid format for instance_ami,base_os : {}".format(parameters["instance_ami"]), "error")
@@ -304,15 +311,44 @@ def create():
         if not image_id.startswith("ami-"):
             flash("AMI selectioned {} does not seems to be valid. Must start with ami-<id>".format(image_id), "error")
             return redirect("/remote_desktop")
-
+    
 
     user_data = '''#!/bin/bash -x
 export PATH=$PATH:/usr/local/bin
 if [[ "''' + base_os + '''" == "centos7" ]] || [[ "''' + base_os + '''" == "rhel7" ]];
 then
+        mv /etc/yum.repos.d/* /tmp
+        echo "[base]" >> /etc/yum.repos.d/private.repo
+        echo "name=CentOS-7 - Base" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/base" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+        echo "[updates]" >> /etc/yum.repos.d/private.repo
+        echo "name=CentOS-7 - Updates" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/updates" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+        echo "[extras]" >> /etc/yum.repos.d/private.repo
+        echo "name=CentOS-7 - Extras" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/extras" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+        echo "[centosplus]" >> /etc/yum.repos.d/private.repo
+        echo "name=CentOS-7 - Plus" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/centosplus" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo -e "enabled=0\n" >> /etc/yum.repos.d/private.repo
+        echo "[aws-fsx]" >> /etc/yum.repos.d/private.repo
+        echo "name=AWS FSx Packages  - $basearch" >> /etc/yum.repos.d/private.repo
+        echo "baseurl=http://'''+ repository + '''/aws-fsx" >> /etc/yum.repos.d/private.repo
+        echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+        echo "enabled=1" >> /etc/yum.repos.d/private.repo
+
         yum install -y python3-pip
         PIP=$(which pip3)
-        $PIP install awscli
+        #$PIP config --user set global.index-url http://'''+ repository +'''/simple
+        #$PIP config --user set global.trusted-host '''+ repository +'''
+        $PIP install awscli -i http://'''+ repository +'''/simple --trusted-host '''+ repository +'''
         yum install -y nfs-utils # enforce install of nfs-utils
 else
      yum install -y python3-pip
@@ -338,15 +374,24 @@ echo export "SOCA_INSTALL_BUCKET_FOLDER="''' + str(soca_configuration['S3Install
 echo export "SOCA_INSTANCE_TYPE=$GET_INSTANCE_TYPE" >> /etc/environment
 echo export "SOCA_HOST_SYSTEM_LOG="/apps/soca/''' + str(soca_configuration['ClusterId']) + '''/cluster_node_bootstrap/logs/desktop/''' + str(session["user"]) + '''/''' + session_name + '''/$(hostname -s)"" >> /etc/environment
 echo export "AWS_DEFAULT_REGION="'''+region+'''"" >> /etc/environment
+echo export "REPOSITORY="''' + repository + '''"" >> /etc/environment
+echo export "SOCA_FSX_LUSTRE_FILE_SYSTEM_ID="''' + soca_configuration["FSxLustreFileSystemId"] + '''"" >> /etc/environment
+echo export "SOCA_FSX_LUSTRE_MOUNT_NAME="''' + soca_configuration["FSxLustreMountName"] + '''"" >> /etc/environment
+
+# Add scratch storage for Desktop
+echo export "SOCA_SCRATCH_SIZE='''+str(scratch_size)+'''" >> /etc/environment
+
 source /etc/environment
 AWS=$(which aws)
 # Give yum permission to the user on this specific machine
 echo "''' + session['user'] + ''' ALL=(ALL) /bin/yum" >> /etc/sudoers
 mkdir -p /apps
 mkdir -p /data
+mkdir -p /pdk
 # Mount EFS
 echo "''' + soca_configuration['EFSDataDns'] + ''':/ /data nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
 echo "''' + soca_configuration['EFSAppsDns'] + ''':/ /apps nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
+echo "''' + soca_configuration['EFSPDKDns'] + ''':/ /pdk nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
 EFS_MOUNT=0
 mount -a 
 while [[ $? -ne 0 ]] && [[ $EFS_MOUNT -lt 5 ]]
@@ -394,7 +439,11 @@ systemctl enable chronyd
 # Prepare  Log folder
 mkdir -p $SOCA_HOST_SYSTEM_LOG
 echo "@reboot /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/ComputeNodePostReboot.sh >> $SOCA_HOST_SYSTEM_LOG/ComputeNodePostReboot.log 2>&1" | crontab -
-$AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.cfg /root/
+$AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.cfg /root
+
+# Replace repository FQDN
+sed -i "s/repository-fqdn/$REPOSITORY/g" /root/config.cfg
+
 /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/ComputeNode.sh ''' + soca_configuration['SchedulerPrivateDnsName'] + ''' >> $SOCA_HOST_SYSTEM_LOG/ComputeNode.sh.log 2>&1'''
 
 
@@ -433,7 +482,8 @@ $AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.
                          "user": session["user"],
                          "DefaultMetricCollection": True if soca_configuration["DefaultMetricCollection"] == "true" else False,
                          "SolutionMetricLambda": soca_configuration['SolutionMetricLambda'],
-                         "ComputeNodeInstanceProfileArn": soca_configuration["ComputeNodeInstanceProfileArn"]
+                         "ComputeNodeInstanceProfileArn": soca_configuration["ComputeNodeInstanceProfileArn"],
+                         "scratch_size": scratch_size
                          }
     dry_run_launch = can_launch_instance(launch_parameters)
     if dry_run_launch is True:
