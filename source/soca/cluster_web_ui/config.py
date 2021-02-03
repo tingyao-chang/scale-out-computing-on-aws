@@ -70,6 +70,8 @@ class Config(object):
     DCV_LINUX_TERMINATE_STOPPED_SESSION = 0  # In hours. Stopped Windows DCV will be permanently terminated if user won't restart it within the time specified. 0 to disable
     DCV_LINUX_DEFAULT_SCHEDULE_START = 480  # 8 AM
     DCV_LINUX_DEFAULT_SCHEDULE_STOP = 1140  # 7PM
+    DCV_LINUX_AMI = "" # DCV Linux Default AMI ID
+    DCV_LINUX_BASE_OS = "centos7" # DCV Linux Default AMI Base OS
 
     # DCV Windows
     DCV_WINDOWS_SESSION_COUNT = 4

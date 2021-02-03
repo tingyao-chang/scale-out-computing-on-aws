@@ -299,8 +299,12 @@ def create():
             session_name = 'LinuxDesktop' + str(parameters["session_number"])
 
     if parameters["instance_ami"] == "base":
-        image_id = soca_configuration["CustomAMI"]
-        base_os = read_secretmanager.get_soca_configuration()['BaseOS']
+        if config.Config.DCV_LINUX_AMI != "":
+            image_id = config.Config.DCV_LINUX_AMI
+            base_os = config.Config.DCV_LINUX_BASE_OS
+        else:
+            image_id = soca_configuration["CustomAMI"]
+            base_os = read_secretmanager.get_soca_configuration()['BaseOS']
     else:
         if len(parameters["instance_ami"].split(",")) != 2:
             flash("Invalid format for instance_ami,base_os : {}".format(parameters["instance_ami"]), "error")
