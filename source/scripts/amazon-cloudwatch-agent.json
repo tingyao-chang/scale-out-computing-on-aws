@@ -17,8 +17,8 @@
                         "log_stream_name": "{instance_id}"
                     },
                     {
-                        "file_path": "/var/log/openldap/auditlog.ldif",
-                        "log_group_name": "openldap/auditlog",
+                        "file_path": "/var/log/openldap/audit.log",
+                        "log_group_name": "openldap/audit",
                         "log_stream_name": "{instance_id}"
                     }
                 ]
