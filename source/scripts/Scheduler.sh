@@ -297,7 +297,7 @@ ou: Group
 
 /bin/ldapadd -x -W -y /root/OpenLdapAdminPassword.txt -D "cn=admin,$LDAP_BASE" -f base.ldif
 
-# Add ldap audit log
+# Add Ldap audit log
 mkdir -p /var/log/openldap/
 chown -R ldap:ldap /var/log/openldap/
 
@@ -307,7 +307,7 @@ cn: module
 objectClass: olcModuleList
 olcModulePath: /usr/lib64/openldap
 olcModuleLoad: auditlog.la
-" > loadmodule.ldif
+" > module_auditlog.ldif
 
 echo -e "
 dn: olcOverlay=auditlog,olcDatabase={2}hdb,cn=config
@@ -315,11 +315,59 @@ changetype: add
 objectClass: olcOverlayConfig
 objectClass: olcAuditLogConfig
 olcOverlay: auditlog
-olcAuditlogFile: /var/log/openldap/auditlog.ldif
-" > applyoverlay.ldif
+olcAuditlogFile: /var/log/openldap/audit.log
+" > overlay_auditlog.ldif
 
-/bin/ldapadd -Y EXTERNAL -H ldapi:/// -f loadmodule.ldif
-/bin/ldapadd -Y EXTERNAL -H ldapi:/// -f applyoverlay.ldif
+/bin/ldapadd -Y EXTERNAL -H ldapi:/// -f module_auditlog.ldif
+/bin/ldapadd -Y EXTERNAL -H ldapi:/// -f overlay_auditlog.ldif
+
+# Add Ldap password policy and install pqchecker
+
+yum install -y $PQCHECKER_URL
+
+ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/ppolicy.ldif
+
+echo -e "
+dn: cn=module{0},cn=config
+changetype: modify
+add: olcModuleLoad
+olcModuleLoad: ppolicy.la
+" > module_ppolicy.ldif
+
+echo -e "
+dn: olcOverlay=ppolicy,olcDatabase={2}hdb,cn=config
+objectClass: olcOverlayConfig
+objectClass: olcPPolicyConfig
+olcOverlay: ppolicy
+olcPPolicyDefault: cn=default,ou=policies,dc=soca,dc=local
+" > overlay_ppolicy.ldif
+
+echo -e "
+dn: ou=policies,dc=soca,dc=local
+objectClass: organizationalUnit
+ou: policies
+" > ou_policies.ldif
+
+echo -e "
+dn: cn=default,ou=policies,dc=soca,dc=local
+objectClass: pwdPolicy
+objectClass: organizationalRole
+objectClass: pwdPolicyChecker
+cn: default
+pwdAttribute: userPassword
+pwdCheckQuality: 2
+pwdMinLength: 12
+pwdMaxAge: 7776000
+pwdInHistory: 5
+pwdMinAge: 259200
+pwdCheckModule: libpqchecker.so
+" > cn_default_pwdPolicy.ldif
+
+ldapmodify -Y EXTERNAL -H ldapi:/// -f module_ppolicy.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f overlay_ppolicy.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f ou_policies.ldif
+ldapadd -Y EXTERNAL -H ldapi:/// -f cn_default_pwdPolicy.ldif
+
 
 authconfig \
     --enablesssd \
