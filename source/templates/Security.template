@@ -10,9 +10,6 @@ Parameters:
   SchedulerPublicIP:
     Type: String
 
-  EIPNat:
-    Type: String
-
   ClusterId:
     Type: String
 
@@ -68,6 +65,17 @@ Resources:
         - Key: soca:ClusterId
           Value: !Ref ClusterId
 
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: SG For Application Load Balancer
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterId}-LoadBalancerSG
+        - Key: soca:ClusterId
+          Value: !Ref ClusterId
+
   SchedulerInboundRule:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -77,56 +85,6 @@ Resources:
       SourceSecurityGroupId: !GetAtt ComputeNodeSecurityGroup.GroupId
       GroupId: !GetAtt SchedulerSecurityGroup.GroupId
       Description: "Allow all traffic between scheduler and compute nodes"
-
-  SchedulerInboundRuleAllowClientIP:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: !Ref ClientIp
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow SSH traffic from client IP to master host"
-
-  SchedulerInboundRuleAllowClientIPHTTPS:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 443
-      ToPort: 443
-      CidrIp: !Ref ClientIp
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow HTTPS traffic from client IP to ELB"
-
-  SchedulerInboundRuleAllowSchedulerIPHTTPS:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 443
-      ToPort: 443
-      CidrIp: !Join [ "", [ !Ref SchedulerPublicIP, "/32" ] ]
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow HTTPS traffic from Scheduler IP to ELB to validate DCV sessions"
-
-  SchedulerInboundRuleAllowNATIPHTTPS:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 443
-      ToPort: 443
-      CidrIp: !Join [ "", [ !Ref EIPNat, "/32" ] ]
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow HTTPS traffic from Compute Nodes NAT IP to ELB"
-
-  SchedulerInboundRuleAllowClientIPHTTP:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 80
-      ToPort: 80
-      CidrIp: !Ref ClientIp
-      GroupId: !GetAtt SchedulerSecurityGroup.GroupId
-      Description: "Allow HTTP traffic from client IP to ELB"
 
   ComputeNodeInboundRule:
     Type: AWS::EC2::SecurityGroupIngress
@@ -145,6 +103,36 @@ Resources:
       SourceSecurityGroupId: !GetAtt ComputeNodeSecurityGroup.GroupId
       GroupId: !Ref ComputeNodeSecurityGroup
       Description: "Allow ALL traffic for ComputeNode and EFA"
+
+  LoadBalancerInboundRuleAllowClientIPHTTP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: !Ref ClientIp
+      GroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
+      Description: "Allow HTTP traffic from client IP to ELB"
+
+  LoadBalancerInboundRuleAllowClientIPHTTPS:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: !Ref ClientIp
+      GroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
+      Description: "Allow HTTPS traffic from client IP to ELB"
+
+  LoadBalancerInboundRuleAllowSchedulerIPHTTPS:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: !Join [ "", [ !Ref SchedulerPublicIP, "/32" ] ]
+      GroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
+      Description: "Allow HTTPS traffic from Scheduler IP to ELB to validate DCV sessions"
 
   ComputeNodeOutboundItself:
     Type: AWS::EC2::SecurityGroupEgress
@@ -180,7 +168,7 @@ Resources:
       IpProtocol: tcp
       FromPort: 8443
       ToPort: 8443
-      SourceSecurityGroupId: !GetAtt SchedulerSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       GroupId: !Ref SchedulerSecurityGroup
       Description: "Allow ELB healtcheck to communicate with web ui on master host"
 
@@ -208,6 +196,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore # Support for SSM
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy # Support for CloudWatch Agent
       Policies:
         - PolicyName: ComputeNodePermissions
           PolicyDocument:
@@ -335,6 +324,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore # Support for SSM
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy # Support for CloudWatch Agent
       Policies:
         - PolicyName: SchedulerReadPermissions
           PolicyDocument:
@@ -648,6 +638,7 @@ Outputs:
     Value: !GetAtt SchedulerSecurityGroup.GroupId
   ComputeNodeSecurityGroup:
     Value: !GetAtt ComputeNodeSecurityGroup.GroupId
+  LoadBalancerSecurityGroup:
+    Value: !GetAtt LoadBalancerSecurityGroup.GroupId
   LambdaACMIAMRoleArn:
     Value: !GetAtt LambdaACMIAMRole.Arn
-

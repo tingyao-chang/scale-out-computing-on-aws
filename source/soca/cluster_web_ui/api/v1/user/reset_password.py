@@ -32,6 +32,8 @@ class Reset(Resource):
               required:
                 - user
                 - password
+                - old_password
+                - admin_reset
               properties:
                 user:
                   type: string
@@ -39,6 +41,12 @@ class Reset(Resource):
                 password:
                   type: string
                   description: New password to configure
+                old_password:
+                  type: string
+                  description: Old password to confirm
+                admin_reset:
+                  type: string
+                  description: Password is reset by admin or not
 
         responses:
           200:
@@ -51,9 +59,13 @@ class Reset(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("user", type=str, location="form")
         parser.add_argument("password", type=str, location="form")
+        parser.add_argument("old_password", type=str, location="form")
+        parser.add_argument("admin_reset", type=str, location="form")
         args = parser.parse_args()
         user = args["user"]
         password = args["password"]
+        old_password = args["old_password"]
+        admin_reset = args["admin_reset"]
         if user is None or password is None:
             return errors.all_errors("CLIENT_MISSING_PARAMETER", "user (str) and password (str) parameters are required")
 
@@ -68,9 +80,13 @@ class Reset(Resource):
         new_value = passwd
         try:
             conn = ldap.initialize('ldap://' + config.Config.LDAP_HOST)
-            conn.simple_bind_s(config.Config.ROOT_DN, config.Config.ROOT_PW)
-            mod_attrs = [(ldap.MOD_REPLACE, "userPassword", new_value.encode('utf-8'))]
-            conn.modify_s(dn_user, mod_attrs)
+            if admin_reset == "yes":
+                conn.simple_bind_s(config.Config.ROOT_DN, config.Config.ROOT_PW)
+                mod_attrs = [(ldap.MOD_REPLACE, "userPassword", new_value.encode('utf-8'))]
+                conn.modify_s(dn_user, mod_attrs)
+            else:
+                conn.simple_bind_s(dn_user, old_password)
+                conn.passwd_s(dn_user, old_password, password)
             return {"success": True, "message": "Password updated correctly."}, 200
 
         except Exception as err:

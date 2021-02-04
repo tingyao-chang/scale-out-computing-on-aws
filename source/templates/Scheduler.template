@@ -53,7 +53,7 @@ Parameters:
   SchedulerPublicIPAllocation:
     Type: String
 
-  RepositoryIP:
+  Repository:
     Type: String
     
 Conditions:
@@ -72,7 +72,7 @@ Resources:
         - DeviceName: !If [UseAmazonLinux, "/dev/xvda", "/dev/sda1"]
           Ebs:
             VolumeSize: 150
-            VolumeType: gp2
+            VolumeType: gp3
             Encrypted: true
 
       KeyName: !Ref SSHKeyPair
@@ -112,6 +112,27 @@ Resources:
             if [ "${BaseOS}" == "centos7" ];
               then
                 usermod --shell /usr/sbin/nologin centos
+                mv /etc/yum.repos.d/CentOS-* /tmp
+                echo "[base]" >> /etc/yum.repos.d/private.repo
+                echo "name=CentOS-7 - Base" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/base" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+                echo "[updates]" >> /etc/yum.repos.d/private.repo
+                echo "name=CentOS-7 - Updates" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/updates" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+                echo "[extras]" >> /etc/yum.repos.d/private.repo
+                echo "name=CentOS-7 - Extras" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/extras" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+                echo "[centosplus]" >> /etc/yum.repos.d/private.repo
+                echo "name=CentOS-7 - Plus" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/centosplus" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo "enabled=0" >> /etc/yum.repos.d/private.repo
             fi
 
             # Install awscli
@@ -119,7 +140,9 @@ Resources:
             then
               yum install -y python3-pip
               PIP=$(which pip3)
-              $PIP install awscli
+              #$PIP config --user set global.index-url http://${Repository}/simple
+              #$PIP config --user set global.trusted-host ${Repository}
+              $PIP install awscli -i http://${Repository}/simple --trusted-host ${Repository}
               export PATH=$PATH:/usr/local/bin
             fi
 
@@ -139,6 +162,7 @@ Resources:
             echo export "SOCA_INSTALL_BUCKET_FOLDER=${S3InstallFolder}" >> /etc/environment
             echo export "SOCA_VERSION=${Version}" >> /etc/environment
             echo export "SOCA_INSTALL_AMI=${ImageId}" >> /etc/environment
+            echo export "REPOSITORY=${Repository}" >> /etc/environment
             source /etc/environment
 
             # Tag EBS disks manually as CFN ASG does not support it
@@ -155,6 +179,13 @@ Resources:
             AWS=$(which aws)
             echo "@reboot $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/SchedulerPostReboot.sh /root && /bin/bash /root/SchedulerPostReboot.sh ${S3Bucket} ${S3InstallFolder} ${UserName} '${UserPassword}' >> /root/PostRebootConfig.log 2>&1" | crontab -
             $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/config.cfg /root/
+
+            # Replace repository FQDN
+            sed -i "s/repository-fqdn/$REPOSITORY/g" /root/config.cfg
+
+            # CloudWatch Agent Configuration
+            $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/amazon-cloudwatch-agent.json /root/
+
             $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/requirements.txt /root/
             $AWS s3 cp s3://${S3Bucket}/${S3InstallFolder}/scripts/Scheduler.sh /root/
             /bin/bash /root/Scheduler.sh ${EFSDataDns} ${EFSAppsDns} >> /root/Scheduler.sh.log 2>&1

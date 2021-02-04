@@ -6,14 +6,14 @@ Parameters:
 
   PublicSubnet1:
     Type: String
-
+  
+  PublicSubnet2:
+    Type: String
+  
   ClusterId:
     Type: String
 
   SchedulerPublicIP:
-    Type: String
-
-  EIPNat:
     Type: String
 
   ClientIp:
@@ -56,7 +56,6 @@ Resources:
                 aws:SourceIp:
                   - !Ref ClientIp
                   - !Sub ${SchedulerPublicIP}/32
-                  - !Sub ${EIPNat}/32
             Resource: !Sub 'arn:${AWS::Partition}:es:${AWS::Region}:${AWS::AccountId}:domain/${ClusterId}/*'
 
       AdvancedOptions:
@@ -74,6 +73,7 @@ Resources:
       #VPCOptions:
       #  SubnetIds:
       #    - !Ref PublicSubnet1
+      #    - !Ref PublicSubnet2
       #  SecurityGroupIds:
       #    - !Ref SchedulerSecurityGroup
 

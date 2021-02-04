@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% include 'common/header.html' %}
+</head>
+<body id="page-top">
+<div id="wrapper">
+    {% include 'common/vertical_menu_bar.html' %}
+    <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+            <br>
+            <div class="container-fluid">
+                {% include 'common/horizontal_menu_bar.html' %}
+                {% if sudoers == false %}
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Access denied </strong>
+                        Only users with sudo permissions can access this page
+                        <br>
+                    </div>
+                {% else %}
+                    <div id="accessok">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <br>
+                                {% if category == "success" %}
+                                    <div class="alert alert-success">
+                                        <strong>{{ message }} </strong>
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-danger">
+                                        <strong>{{ message }} </strong>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    <div class="col-md-10">
+                       <div class="alert alert-warning">
+                       <strong> SOCA ticketing system</strong><br>
+
+                    </div>
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                            <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-add"
+                               role="tab" aria-controls="nav-home" aria-selected="true">Open Issue Ticket</a>
+			    <a class="nav-item nav-link" id="nav-request-tab" data-toggle="tab" href="#nav-request"
+                               role="tab" aria-controls="nav-request" aria-selected="true">Open Request Ticket</a>
+                            <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-view"
+                               role="tab" aria-controls="nav-view" aria-selected="false">View Ticket</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content" id="nav-tabContent">
+
+                        <div class="tab-pane fade show active" id="nav-add" role="tabpanel"
+                             aria-labelledby="nav-home-tab">
+                            <br>
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Open a new support ticket</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/ticket/support_center/create" method="post">
+                                        <div class="form-group">
+                                            <label for="ticket_type" data-toggle="tooltip" data-placement="top" title="Ticket type">Type</label>
+                                            <input id="ticket_type" placeholder="Issue" value="Issue" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_type" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+					<div class="form-group">
+                                            <label for="ticket_title" data-toggle="tooltip" data-placement="top" title="Describe your issue">Title</label>
+                                            <input id="ticket_title" placeholder="Describe your issue..." class="form-control"
+                                                   type="text"
+                                                   required name="ticket_title" minlength="8" maxlength="200">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_catalog" data-toggle="tooltip" data-placement="top" title="Select issue catalog" >Catalog</label>
+                                            <select class="form-control" id="ticket_catalog" name="ticket_catalog">
+                                                <option value="soca_platform">SOCA platform</option>
+                                                <option value="dcv_for_remote_display">DCV for remote display</option>
+                                                <option value="eda_software">EDA software</option>
+                                                <option value="file_transmission">File transmission</option>
+                                            </select>
+                                        </div>
+
+                                         <div class="form-group">
+                                            <label data-toggle="tooltip" data-placement="top" title="Severity levels for issue" for="ticket_severity">Severity</label>
+                                            <input type="number" min=1 value=3 max=5 id="ticket_severity"
+                                                   class="form-control" type="number"
+                                                   required name="ticket_severity">
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label for="ticket_desc" data-toggle="tooltip" data-placement="top" title="Description issue with detailed information" >Description</label>
+                                            <input id="ticket_desc" placeholder="Issue description"
+                                                   class="form-control" type="text"
+                                                   required name="ticket_desc">
+                                        </div>
+
+                                        <div align="justify">
+                                            <input type="hidden" name="csrf_token"
+                                                   value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-primary btn-lg">Submit Ticket
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+			<div class="tab-pane fade" id="nav-request" role="tabpanel"
+                             aria-labelledby="nav-request-tab">
+                            <br>
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Open a new request ticket</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/ticket/support_center/create" method="post">
+                                        
+                                        <div class="form-group">
+                                            <label for="ticket_type" data-toggle="tooltip" data-placement="top" title="Ticket type">Type</label>
+                                            <input id="ticket_type" placeholder="Request" value="Request" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_type" minlength="8" maxlength="21" readonly>
+					</div>
+
+
+					<div class="form-group">
+                                            <label for="ticket_title" data-toggle="tooltip" data-placement="top" title="Describe your request">Title</label>
+                                            <input id="ticket_title" placeholder="Describe your request..." class="form-control"
+                                                   type="text"
+                                                   required name="ticket_title" minlength="8" maxlength="100">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_catalog" data-toggle="tooltip" data-placement="top" title="Select catalog that your request is belonged to" >Catalog</label>
+                                            <select class="form-control" id="ticket_catalog" name="ticket_catalog">
+						<option value="limit_increase">Limits increase</option>
+                                                <option value="create_account">Create new account</option>
+                                                <option value="dcv_for_remote_display">DCV for remote display</option>
+                                                <option value="eda_software">EDA software</option>
+                                                <option value="file_transmission">File transmission</option>
+                                            </select>
+                                        </div>
+
+                                         <div class="form-group">
+                                            <label data-toggle="tooltip" data-placement="top" title="Severity levels for request" for="ticket_severity">Severity</label>
+                                            <input type="number" min=1 value=3 max=5 id="ticket_severity"
+                                                   class="form-control" type="number"
+                                                   required name="ticket_severity">
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label for="ticket_desc" data-toggle="tooltip" data-placement="top" title="Description request with detailed information" >Description</label>
+                                            <input id="ticket_desc" placeholder="Issue description"
+                                                   class="form-control" type="text"
+                                                   required name="ticket_desc">
+                                        </div>
+
+                                        <div align="justify">
+                                            <input type="hidden" name="csrf_token"
+                                                   value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-primary btn-lg">Submit Ticket
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="nav-view" role="tabpanel" aria-labelledby="nav-profile-tab">
+                            <div class="card shadow mb-4">
+				<div class="card-body">
+                              {%  if not ticket_infos %}
+                                  You don't have any open tickets.
+                              {% else %}
+
+                        {% for ticket in ticket_infos %}
+                        <div class="tab-pane fade show active" id="nav-add" role="tabpanel"
+                             aria-labelledby="nav-home-tab">
+                            <br>
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Manage support ticket {{ ticket['id'] }}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/ticket/support_center/update" method="post">
+                                        <div class="form-group">
+                                            <label for="ticket_id" data-toggle="tooltip" data-placement="top" title="Ticket ID">Ticket ID</label>
+                                            <input id="ticket_id" placeholder="1234567" value="{{ ticket['id'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_id" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_username" data-toggle="tooltip" data-placement="top" title="Username">Username</label>
+                                            <input id="ticket_username" placeholder="ty" value="{{ ticket['username'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_username" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_status" data-toggle="tooltip" data-placement="top" title="Ticket Status">Ticket Status</label>
+                                            <input id="ticket_status" placeholder="working" value="{{ ticket['status'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_status" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_type" data-toggle="tooltip" data-placement="top" title="Ticket type">Type</label>
+                                            <input id="ticket_type" placeholder="Issue" value="{{ ticket['type'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_type" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_title" data-toggle="tooltip" data-placement="top" title="Describe your issue">Title</label>
+                                            <input id="ticket_title" placeholder="Describe your issue..." value="{{ ticket['title'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_title" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_catalog" data-toggle="tooltip" data-placement="top" title="Select issue catalog" >Catalog</label>
+                                            <input id="ticket_catalog" placeholder="Ticket catalog" value="{{ ticket['catalog'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_catalog" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+                                         <div class="form-group">
+                                            <label data-toggle="tooltip" data-placement="top" title="Severity levels for issue" for="ticket_severity">Severity</label>
+                                            <input id="ticket_severity" placeholder="Ticket severity" value="{{ ticket['severity'] }}" class="form-control"
+                                                   type="text"
+                                                   required name="ticket_severity" minlength="8" maxlength="21" readonly>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label for="ticket_desc" data-toggle="tooltip" data-placement="top" title="Description issue with detailed information" >Description</label>
+                                            <input id="ticket_desc" placeholder="Issue description" value="{{ ticket['description'] }}"
+                                                   class="form-control" type="text"
+                                                   required name="ticket_desc" readonly>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="ticket_update" data-toggle="tooltip" data-placement="top" title="Update status for this ticket" >Status Update</label>
+                                            <input id="ticket_update" placeholder="Update ticket status by user"
+                                                   class="form-control" type="text"
+                                                   required name="ticket_update">
+                                        </div>
+
+                                        <div align="justify">
+                                            <input type="hidden" name="csrf_token"
+                                                   value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-primary btn-lg">Update Ticket
+
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                                     <h6 class="m-0 font-weight-bold text-primary">Open Ticket</h6>
+                                     <table class="table table-striped">
+                                      <thead>
+                                        <tr>
+                                          <th scope="col">Ticket Id</th>
+                                            <th>User Name</th>
+                                            <th>Catalog</th>
+                                            <th>Status</th>
+                                            <th>Title</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                      {% for ticket in ticket_infos %}
+                                           <tr>
+                                          <th>{{ ticket['id'] }}</th>
+                                          <th>{{ ticket['username'] }}</th>
+                                          <th>{{ ticket['catalog'] }}</th>
+                                          <th>{{ ticket['status'] }}</th>
+                                          <th>{{ ticket['title'] }}</th>
+                                           <th>
+                                               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ticket{{ ticket['id'] }}">Ticket Info</button>
+                                               <button type="button" class="btn btn-success" data-toggle="modal" data-target="#close{{ ticket['id'] }}">Close Ticket</button>
+                                           </th>
+                                           </tr>
+                                          <!-- Modal Close -->
+                                          <div class="modal fade" id="close{{ ticket['id'] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                              <div class="modal-dialog" role="document">
+                                                  <div class="modal-content">
+                                                      <div class="modal-header">
+                                                          <h5 class="modal-title">Confirming</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                      </div>
+                                                      <div class="modal-body container">
+                                                          <div class="alert alert-success">
+                                                              <strong>Attention</strong> <br>
+                                                              You are about to close this ticket. User has to open new ticket if they need support. This action cannot be reversed.
+                                                          </div>
+                                                            <a href="/ticket/support_center/close?ticket_id={{ ticket['id'] }}&ticket_username={{ ticket['username'] }}">
+                                                                <button type="button" class="btn btn-success form-control">Close ticket {{ ticket['id'] }}</button>
+                                                            </a>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- End -->
+                                          <!-- Modal Info -->
+                                          <div class="modal fade" id="ticket{{ ticket['id'] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                              <div class="modal-dialog modal-lg" role="document">
+                                                  <div class="modal-content modal-lg">
+                                                      <div class="modal-header">
+                                                          <h5 class="modal-title">Ticket {{ ticket['id'] }}</h5>
+                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                              <span aria-hidden="true">&times;</span>
+                                                          </button>
+                                                      </div>
+                                                      <div class="modal-body container">
+                                                          <strong>{{ ticket }}</strong>: hello<br>
+                                                          </div>
+                                                          <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                          </div>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                          <!-- End -->
+                                          {% endfor %}
+
+
+                                      </tbody>
+                                    </table>
+                                  {%  endif %}
+				  <h6 class="m-0 font-weight-bold text-primary">Closed Ticket</h6>
+                                  {% if not closed_ticket_infos %}
+                                    You don't have any closed tickets.
+                                  {% else %}
+                                    <table class="table table-striped">
+                                      <thead>
+                                        <tr>
+                                          <th scope="col">Ticket Id</th>
+                                            <th>User Name</th>
+                                            <th>Catalog</th>
+                                            <th>Status</th>
+                                            <th>Title</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                      {% for closed_ticket in closed_ticket_infos %}
+                                           <tr>
+                                          <th>{{ closed_ticket['id'] }}</th>
+                                          <th>{{ closed_ticket['username'] }}</th>
+                                          <th>{{ closed_ticket['catalog'] }}</th>
+                                          <th>{{ closed_ticket['status'] }}</th>
+                                          <th>{{ closed_ticket['title'] }}</th>
+                                      {% endfor %}
+                                      </tbody>
+                                    </table>
+                                  {% endif %}
+                            </div>
+			</div>
+                    </div>
+                {% endif %}
+                <a class="scroll-to-top rounded" href="#page-top">
+                    <i class="fas fa-angle-up"></i>
+                </a>
+
+                {% include 'common/footer.html' %}
+  <script>
+    $(document).ready(function() {
+        // enable tooltip
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })})
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+    "agent": {
+        "run_as_user": "root"
+    },
+    "logs": {
+        "logs_collected": {
+            "files": {
+                "collect_list": [
+                    {
+                        "file_path": "/var/log/secure",
+                        "log_group_name": "secure",
+                        "log_stream_name": "{instance_id}"
+                    },
+                    {
+                        "file_path": "/var/log/messages",
+                        "log_group_name": "messages",
+                        "log_stream_name": "{instance_id}"
+                    },
+                    {
+                        "file_path": "/var/log/openldap/auditlog.ldif",
+                        "log_group_name": "openldap/auditlog",
+                        "log_stream_name": "{instance_id}"
+                    }
+                ]
+            }
+        }
+    }
+}

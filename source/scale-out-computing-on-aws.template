@@ -26,16 +26,14 @@ Metadata:
           - UserName
           - UserPassword
       - Label:
-          default: Local Repository
+          default: Private repository
         Parameters:
-          - RepositoryIP
+          - Repository
       - Label:
-          default: VPC Peering information
+          default: FSx for Lustre
         Parameters:
-          - PeerVPCAccountId
-          - PeerVPCId
-          - PeerRoleArn
-          - PeerVPCCidr
+          - StorageCapacity
+          - DeploymentType
 
     ParameterLabels:
       VpcCidr:
@@ -58,8 +56,6 @@ Metadata:
         default: Username for your default LDAP user
       UserPassword:
         default: Password for your default LDAP user
-      RepositoryIP:
-        default: IP for your local repository
 
 Parameters:
   CustomAMI:
@@ -78,7 +74,7 @@ Parameters:
       "rhel7",
       "amazonlinux2",
     ]
-    "Default": "amazonlinux2"
+    "Default": "centos7"
     "Description": IMPORTANT CENTOS USERS > You MUST subscribe to https://aws.amazon.com/marketplace/pp/B00O7WM7QW first if using CentOS
 
   VpcCidr:
@@ -123,26 +119,25 @@ Parameters:
     Description: "5 characters minimum. Must start with a letter. Special chars accepted: !#@+_^{}[]()"
     ConstraintDescription: "5 characters minimum. Must start with a letter. Special chars accepted: !#@+_^{}[]()"
 
-  RepositoryIP:
+  Repository:
     Type: String
-    Description: IP of the yum repository
+    Default: vde-yum-repository.s3-website-us-west-2.amazonaws.com
+    Description: Please enter FQDN only, don't include http.
 
-  PeerVPCAccountId:
+  DeploymentType:
     Type: String
-  
-  PeerVPCId:
-    Type: String
-  
-  PeerRoleArn:
-    Type: String
-  
-  PeerVPCCidr:
-    Type: String
-  
+    Default: SCRATCH_2
+    Description: "Allowed values: PERSISTENT_1 | SCRATCH_1 | SCRATCH_2"
+
+  StorageCapacity:
+    Type: Number
+    Default: 1200
+    Description: "For SCRATCH_2 and PERSISTENT_1 SSD deployment types, valid values are 1200 GiB, 2400 GiB, and increments of 2400 GiB."
+
 Mappings:
   Send:
     AnonymousUsage:
-      Data: Yes # Must be either Yes or No. Do not use any single or double quotes. Refer to https://docs.aws.amazon.com/solutions/latest/scale-out-computing-on-aws/appendix-d.html
+      Data: No # Must be either Yes or No. Do not use any single or double quotes. Refer to https://docs.aws.amazon.com/solutions/latest/scale-out-computing-on-aws/appendix-d.html
 
   Info:
     Data:
@@ -153,80 +148,78 @@ Mappings:
       amazonlinux2: ec2-user
       rhel7: ec2-user
 
-
-
   RegionMap:
     ap-east-1: # Hong Kong
       rhel7: ami-1a453e6b
-      centos7: ami-68e59c19
+      centos7: ami-09611bd6fa5dd0e3d
       amazonlinux2: ami-570c7726
     ap-northeast-1: # Tokyo
       rhel7: ami-00b95502a4d51a07e
-      centos7: ami-045f38c93733dd48d
+      centos7: ami-0ddea5e0f69c193a4
       amazonlinux2: ami-0c3fd0f5d33134a76
     ap-northeast-2: # Seoul
       rhel7: ami-041b16ca28f036753
-      centos7: ami-06cf2a72dadf92410
+      centos7: ami-0e4214f08b51e23cc
       amazonlinux2: ami-095ca789e0549777d
     ap-south-1: # Mumbai
       rhel7: ami-0963937a03c01ecd4
-      centos7: ami-02e60be79e78fef21
+      centos7: ami-0ffc7af9c06de0077
       amazonlinux2: ami-0d2692b6acea72ee6
     ap-southeast-1: # Singapore
       rhel7: ami-055c55112e25b1f1f
-      centos7: ami-0b4dd9d65556cac22
+      centos7: ami-0adfdaea54d40922b
       amazonlinux2: ami-01f7527546b557442
     ap-southeast-2: # Sydney
       rhel7: ami-036b423b657376f5b
-      centos7: ami-08bd00d7713a39e7d
+      centos7: ami-03d56f451ca110e99
       amazonlinux2: ami-0dc96254d5535925f
     ca-central-1: # Canada
       rhel7: ami-06ca3c0058d0275b3
-      centos7: ami-033e6106180a626d0
+      centos7: ami-0a7c5b189b6460115
       amazonlinux2: ami-0d4ae09ec9361d8ac
     eu-central-1: # Frankfurt
       rhel7: ami-09de4a4c670389e4b
-      centos7: ami-04cf43aca3e6f3de3
+      centos7: ami-08b6d44b4f6f7b279
       amazonlinux2: ami-0cc293023f983ed53
     eu-north-1: # Stockholm
       rhel7: ami-66f67f18
-      centos7: ami-5ee66f20
+      centos7: ami-0358414bac2039369
       amazonlinux2: ami-3f36be41
     eu-west-1: # Dublin
       rhel7: ami-0202869bdd0fc8c75
-      centos7: ami-0ff760d16d9497662
+      centos7: ami-04f5641b0d178a27a
       amazonlinux2: ami-0bbc25e23a7640b9b
     eu-west-2: # London
       rhel7: ami-0188c0c5eddd2d032
-      centos7: ami-0eab3a90fc693af19
+      centos7: ami-0b22fcaf3564fb0c9
       amazonlinux2: ami-0d8e27447ec2c8410
     eu-west-3: # Paris
       rhel7: ami-0c4224e392ec4e440
-      centos7: ami-0e1ab783dc9489f34
+      centos7: ami-072ec828dae86abe5
       amazonlinux2: ami-0adcddd3324248c4c
     me-south-1: # Bahrain
       rhel7: AMI_NOT_ADDED_YET # /todo Update AMI ID when available
-      centos7: ami-08529c51dbe004acb
+      centos7: ami-0ac17dcdd6f6f4eb6
       amazonlinux2: ami-0624cbc1598d12691
     us-east-1: # Virginia
       rhel7: ami-000db10762d0c4c05
-      centos7: ami-02eac2c0129f6376b
+      centos7: ami-00e87074e52e6c9f9
       amazonlinux2: ami-0b898040803850657
     us-east-2: # Ohio
       rhel7: ami-094720ddca649952f
-      centos7: ami-0f2b4fc905b0bd1f1
+      centos7: ami-00f8e2c955f7ffa9b
       amazonlinux2: ami-0d8f6eb4f641ef691
     us-west-1: # Northern California
       rhel7: ami-04642fc8fca1e8e67
-      centos7: ami-074e2d6769f445be5
+      centos7: ami-08d2d8b00f270d03b
       amazonlinux2: ami-056ee704806822732
     us-west-2: # Oregon
       rhel7: ami-036affea69a1101c9
-      centos7: ami-01ed306a12b7d1c96
+      centos7: ami-0686851c4e7b1a8e1
       amazonlinux2: ami-082b5a644766e0e6f
     sa-east-1: # Sao Paulo
       rhel7: ami-05c1c16cac05a7c0b
-      centos7: ami-0b8d86d4bf91850af
+      centos7: ami-02334c45dd95ca1fc
       amazonlinux2: ami-058943e7d9b9cabfb
 
 Conditions:
@@ -338,8 +331,8 @@ Resources:
       StackName: !Ref "AWS::StackName"
       ClusterIdPrefix: !FindInMap [ Info, Data, ClusterIdPrefix ]
       VPCCidrPrefixBits: !Select [1, !Split [ "/", !Ref VpcCidr ]]
-      PublicSubnetMaskPrefixBits: 4
-      PrivateSubnetMaskPrefixBits: 2
+      PublicSubnetMaskPrefixBits: 6
+      PrivateSubnetMaskPrefixBits: 3
 
   # ============ END PRE-REQUISITE ============ #
 
@@ -352,10 +345,6 @@ Resources:
         ClusterId: !GetAtt CheckSOCAPreRequisite.ClusterId
         PublicSubnetMaskBits: !GetAtt CheckSOCAPreRequisite.PublicSubnetMaskBits
         PrivateSubnetMaskBits: !GetAtt CheckSOCAPreRequisite.PrivateSubnetMaskBits
-        PeerVPCAccountId: !Ref PeerVPCAccountId
-        PeerVPCId: !Ref PeerVPCId
-        PeerRoleArn: !Ref PeerRoleArn
-        PeerVPCCidr: !Ref PeerVPCCidr
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Network.template"] ]
 
   Security:
@@ -369,9 +358,21 @@ Resources:
         S3InstallBucket: !Ref S3InstallBucket
         S3InstallFolder: !Ref S3InstallFolder
         SchedulerPublicIP: !GetAtt Network.Outputs.SchedulerPublicIP
-        EIPNat: !GetAtt Network.Outputs.EIPNat
-
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Security.template"] ]
+      TimeoutInMinutes: 30
+      
+  VPCEndpoints:
+    DependsOn: Security
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        VpcId: !GetAtt Network.Outputs.VpcId
+        SubnetId: !GetAtt Network.Outputs.PublicSubnet1
+        PublicRouteTableId: !GetAtt Network.Outputs.PublicRouteTable
+        PrivateRouteTableId: !GetAtt Network.Outputs.PrivateRouteTable
+        SchedulerSecurityGroupId: !GetAtt Security.Outputs.SchedulerSecurityGroup
+        ComputeNodeSecurityGroupId: !GetAtt Security.Outputs.ComputeNodeSecurityGroup
+      TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/VPCEndpoints.template"] ]
       TimeoutInMinutes: 30
 
   Storage:
@@ -386,6 +387,8 @@ Resources:
         PrivateSubnet2: !GetAtt Network.Outputs.PrivateSubnet2
         PrivateSubnet3: !GetAtt Network.Outputs.PrivateSubnet3
         ClusterId: !Join [ "-", [ !FindInMap [ Info, Data, ClusterIdPrefix ], !Ref "AWS::StackName"] ]
+        StorageCapacity: !Ref StorageCapacity
+        DeploymentType: !Ref DeploymentType
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Storage.template"] ]
       TimeoutInMinutes: 30
 
@@ -411,7 +414,7 @@ Resources:
         UserPassword: !Ref UserPassword
         SchedulerPublicIP: !GetAtt Network.Outputs.SchedulerPublicIP
         SchedulerPublicIPAllocation: !GetAtt Network.Outputs.SchedulerPublicIPAllocation
-        RepositoryIP: !Ref RepositoryIP
+        Repository: !Ref Repository
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Scheduler.template"] ]
       TimeoutInMinutes: 60
 
@@ -422,11 +425,10 @@ Resources:
       Parameters:
         SchedulerSecurityGroup: !GetAtt Security.Outputs.SchedulerSecurityGroup
         PublicSubnet1: !GetAtt Network.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt Network.Outputs.PublicSubnet2
         ClusterId: !GetAtt CheckSOCAPreRequisite.ClusterId
         ClientIp: !Ref ClientIp
         SchedulerPublicIP: !GetAtt Network.Outputs.SchedulerPublicIP
-        EIPNat: !GetAtt Network.Outputs.EIPNat
-
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Analytics.template"] ]
       TimeoutInMinutes: 30
 
@@ -435,10 +437,13 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        SchedulerSecurityGroup: !GetAtt Security.Outputs.SchedulerSecurityGroup
+        LoadBalancerSecurityGroup: !GetAtt Security.Outputs.LoadBalancerSecurityGroup
         PublicSubnet1: !GetAtt Network.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt Network.Outputs.PublicSubnet2
         PublicSubnet3: !GetAtt Network.Outputs.PublicSubnet3
+        PrivateSubnet1: !GetAtt Network.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt Network.Outputs.PrivateSubnet2
+        PrivateSubnet3: !GetAtt Network.Outputs.PrivateSubnet3
         ClusterId: !GetAtt CheckSOCAPreRequisite.ClusterId
         VpcId: !GetAtt Network.Outputs.VpcId
         SchedulerInstanceId: !GetAtt Scheduler.Outputs.SchedulerInstanceId
@@ -446,7 +451,6 @@ Resources:
         LambdaACMIAMRoleArn: !GetAtt Security.Outputs.LambdaACMIAMRoleArn
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Viewer.template"] ]
       TimeoutInMinutes: 30
-
 
   Configuration:
     DependsOn: Viewer
@@ -474,6 +478,7 @@ Resources:
         PrivateSubnet3: !GetAtt Network.Outputs.PrivateSubnet3
         EFSDataDns: !GetAtt Storage.Outputs.EFSDataDns
         EFSAppsDns: !GetAtt Storage.Outputs.EFSAppsDns
+        EFSPDKDns: !GetAtt Storage.Outputs.EFSPDKDns
         S3InstallFolder: !Ref S3InstallFolder
         Version: !FindInMap [ Info, Data, Version ]
         S3Bucket: !Ref S3InstallBucket
@@ -486,7 +491,10 @@ Resources:
         BaseOS: !Ref BaseOS
         SolutionMetricsRoleArn: !GetAtt Security.Outputs.SolutionMetricsRoleArn
         DefaultMetricCollection: !FindInMap [ Send, AnonymousUsage, Data ]
-        RepositoryIP: !Ref RepositoryIP
+        Repository: !Ref Repository
+        AcceleratorDNS: !GetAtt Viewer.Outputs.AcceleratorDNS
+        FSxLustreFileSystemId: !GetAtt Storage.Outputs.FSxLustreFileSystemId
+        FSxLustreMountName: !GetAtt Storage.Outputs.FSxLustreMountName
       TemplateURL: !Join [ "/", [!Sub "https://s3.${AWS::URLSuffix}", !Ref S3InstallBucket, !Ref S3InstallFolder, "templates/Configuration.template"] ]
       TimeoutInMinutes: 60
 
@@ -509,5 +517,7 @@ Outputs:
     Value: !If [UseCustomAMI, !Ref CustomAMI, !FindInMap [RegionMap, !Ref "AWS::Region", !Ref BaseOS]]
   Version:
     Value: !FindInMap [ Info, Data, Version ]
-  RepositoryIP:
-    Value: !Ref RepositoryIP
+  Repository:
+    Value: !Ref Repository
+  AcceleratorDNS:
+    Value: !GetAtt Viewer.Outputs.AcceleratorDNS

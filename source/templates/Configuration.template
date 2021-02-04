@@ -49,6 +49,9 @@ Parameters:
   EFSDataDns:
     Type: String
 
+  EFSPDKDns:
+    Type: String
+
   ClusterId:
     Type: String
 
@@ -100,7 +103,16 @@ Parameters:
   DefaultMetricCollection:
     Type: String
 
-  RepositoryIP:
+  Repository:
+    Type: String
+    
+  AcceleratorDNS:
+    Type: String
+  
+  FSxLustreFileSystemId:
+    Type: String
+
+  FSxLustreMountName:
     Type: String
 
 Resources:
@@ -228,13 +240,15 @@ Resources:
       "ComputeNodeInstanceProfileArn": "${ComputeNodeInstanceProfileArn}",
       "EFSDataDns": "${EFSDataDns}",
       "EFSAppsDns": "${EFSAppsDns}",
+      "EFSPDKDns": "${EFSPDKDns}",
       "ClusterId": "${ClusterId}",
       "Version": "${Version}",
       "S3Bucket": "${S3Bucket}",
       "SSHKeyPair": "${SSHKeyPair}",
       "CustomAMI": "${ImageId}",
       "ESDomainEndpoint": "${ESDomainEndpoint}",
-      "LoadBalancerDNSName": "${LoadBalancerDNSName}",
+      "LoadBalancerDNSNameOriginal": "${LoadBalancerDNSName}",
+      "LoadBalancerDNSName": "${AcceleratorDNS}",
       "LoadBalancerArn": "${LoadBalancerArn}",
       "BaseOS": "${BaseOS}",
       "S3InstallFolder": "${S3InstallFolder}",
@@ -243,7 +257,10 @@ Resources:
       "LdapBase": "DC=soca,dc=local",
       "LdapHost": "${SchedulerPrivateDnsName}",
       "DefaultMetricCollection": "${DefaultMetricCollection}",
-      "RepositoryIP": "${RepositoryIP}"
+      "Repository": "${Repository}",
+      "AcceleratorDNS": "${AcceleratorDNS}",
+      "FSxLustreFileSystemId": "${FSxLustreFileSystemId}",
+      "FSxLustreMountName": "${FSxLustreMountName}"
       }'
 
       Tags:
@@ -497,5 +514,3 @@ Resources:
           - ConditionType: "STRINGEQUALS"
             ConditionKey: "soca:BackupPlan"
             ConditionValue: !Sub ${ClusterId}
-
-

@@ -31,7 +31,7 @@ class Config(object):
     DEFAULT_CACHE_TIME = 120  # 2 minutes. Change this value to optimize performance in case you have a large number of concurrent user
     MAX_UPLOAD_FILE = 5120  # 5 GB
     MAX_UPLOAD_TIMEOUT = 1800000  # 30 minutes
-    ALLOW_DOWNLOAD_FROM_PORTAL = True  # Give user ability to download files from the web portal
+    ALLOW_DOWNLOAD_FROM_PORTAL = False  # Give user ability to download files from the web portal
     MAX_SIZE_ONLINE_PREVIEW = 150000000  # in bytes (150mb by default), maximum size of file that can be visualized via the web editor
     MAX_ARCHIVE_SIZE = 150000000  # in bytes (150mb by default), maximum size of archive generated when downloading multiple files at once
     DAILY_BACKUP_COUNT = 15  # Keep 15 latest daily backups
@@ -70,6 +70,8 @@ class Config(object):
     DCV_LINUX_TERMINATE_STOPPED_SESSION = 0  # In hours. Stopped Windows DCV will be permanently terminated if user won't restart it within the time specified. 0 to disable
     DCV_LINUX_DEFAULT_SCHEDULE_START = 480  # 8 AM
     DCV_LINUX_DEFAULT_SCHEDULE_STOP = 1140  # 7PM
+    DCV_LINUX_AMI = "" # DCV Linux Default AMI ID
+    DCV_LINUX_BASE_OS = "centos7" # DCV Linux Default AMI Base OS
 
     # DCV Windows
     DCV_WINDOWS_SESSION_COUNT = 4
@@ -123,5 +125,11 @@ class Config(object):
     # SSH
     SSH_PRIVATE_KEY_LOCATION = "tmp/ssh"
 
+    # TICKETING SYSTEM
+    TICKET_DDB = "<DynamoDB Table Name for Ticketing System>"
+    TICKET_SNS_TOPIC_ARN = "SNS Topic ARN for Super User"
+    TICKET_SNS_ADMIN_TOPIC_ARN = "SNS Topic ARN for System Admin"
+    TICKET_SNS_NOTIFICATION = False
+    TICKET_REVIEWER_GROUP = "reviewer"
 
 app_config = Config()

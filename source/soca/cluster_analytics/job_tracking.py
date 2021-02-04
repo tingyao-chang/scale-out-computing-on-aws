@@ -88,7 +88,7 @@ def es_entry_exist(job_id):
                          size=1000,
                          body=json_to_push)
     except NotFoundError:
-        print("First entry, Index doest not exist but will be created automaticall.y")
+        print("First entry, Index does not exist but will be created automatically")
         return False
 
     sid = response['_scroll_id']
@@ -292,15 +292,15 @@ if __name__ == "__main__":
                                             # default lustre size
                                             tmp['estimated_price_fsx_lustre'] = 1200 * fsx_lustre * (simulation_time_seconds_with_penalty / 3600)
 
-                                if tmp['instance_type'] not in pricing_table.keys():
-                                    pricing_table[tmp['instance_type']] = get_aws_pricing(tmp['instance_type'])
+                                #if tmp['instance_type'] not in pricing_table.keys():
+                                #    pricing_table[tmp['instance_type']] = get_aws_pricing(tmp['instance_type'])
 
-                                tmp['estimated_price_ec2_ondemand'] = simulation_time_seconds_with_penalty * (pricing_table[tmp['instance_type']]['ondemand'] / 3600) * tmp['nodect']
-                                reserved_hourly_rate = pricing_table[tmp['instance_type']]['reserved'] / 750
-                                tmp['estimated_price_ec2_reserved'] = simulation_time_seconds_with_penalty * (reserved_hourly_rate / 3600) * tmp['nodect']
+                                #tmp['estimated_price_ec2_ondemand'] = simulation_time_seconds_with_penalty * (pricing_table[tmp['instance_type']]['ondemand'] / 3600) * tmp['nodect']
+                                #reserved_hourly_rate = pricing_table[tmp['instance_type']]['reserved'] / 750
+                                #tmp['estimated_price_ec2_reserved'] = simulation_time_seconds_with_penalty * (reserved_hourly_rate / 3600) * tmp['nodect']
 
-                                tmp['estimated_price_ondemand'] = tmp['estimated_price_ec2_ondemand'] + tmp['estimated_price_storage_root_size'] + tmp['estimated_price_storage_scratch_size'] + tmp['estimated_price_storage_scratch_iops'] + tmp['estimated_price_fsx_lustre']
-                                tmp['estimated_price_reserved'] = tmp['estimated_price_ec2_reserved'] + tmp['estimated_price_storage_root_size'] + tmp['estimated_price_storage_scratch_size'] + tmp['estimated_price_storage_scratch_iops'] + tmp['estimated_price_fsx_lustre']
+                                #tmp['estimated_price_ondemand'] = tmp['estimated_price_ec2_ondemand'] + tmp['estimated_price_storage_root_size'] + tmp['estimated_price_storage_scratch_size'] + tmp['estimated_price_storage_scratch_iops'] + tmp['estimated_price_fsx_lustre']
+                                #tmp['estimated_price_reserved'] = tmp['estimated_price_ec2_reserved'] + tmp['estimated_price_storage_root_size'] + tmp['estimated_price_storage_scratch_size'] + tmp['estimated_price_storage_scratch_iops'] + tmp['estimated_price_fsx_lustre']
 
                             json_output.append(tmp)
                 except Exception as e:

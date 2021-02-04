@@ -12,9 +12,21 @@ fi
 service pbs stop
 
 # Install SSM
-yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazon-ssm-$AWS_DEFAULT_REGION/latest/linux_amd64/amazon-ssm-agent.rpm
 systemctl enable amazon-ssm-agent
 systemctl restart amazon-ssm-agent
+
+# Install CloudWatch Agent
+if [[ $SOCA_BASE_OS == "centos7" ]]; then
+    yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazoncloudwatch-agent-$AWS_DEFAULT_REGION/centos/amd64/latest/amazon-cloudwatch-agent.rpm
+elif [[ $SOCA_BASE_OS == "rhel7" ]]; then
+    yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazoncloudwatch-agent-$AWS_DEFAULT_REGION/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
+else # Amazon Linux 2
+    yum install -y amazon-cloudwatch-agent
+fi
+
+# Start the CloudWatch Agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/amazon-cloudwatch-agent.json
 
 SCHEDULER_HOSTNAME=$1
 AWS=$(which aws)
@@ -33,7 +45,7 @@ fi
 yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]})
 
 # Configure Scratch Directory if specified by the user
-mkdir /scratch/
+#mkdir /scratch/
 if [[ $SOCA_SCRATCH_SIZE -ne 0 ]];
 then
     LIST_ALL_DISKS=$(lsblk --list | grep disk | awk '{print $1}')
@@ -46,7 +58,9 @@ then
 	    then
 	        echo "Detected /dev/$disk with no partition as scratch device"
 		    mkfs -t ext4 /dev/$disk
-            echo "/dev/$disk /scratch ext4 defaults 0 0" >> /etc/fstab
+            # change /scratch to /tmp
+            systemctl unmask tmp.mount
+            echo "/dev/$disk /tmp ext4 defaults 0 0" >> /etc/fstab
 	    fi
     done
 else
@@ -86,7 +100,9 @@ else
 	        # If only 1 instance store, mfks as ext4
 	        echo "Detected  1 NVMe device available, formatting as ext4 .."
 	        mkfs -t ext4 $VOLUME_LIST
-	        echo "$VOLUME_LIST /scratch ext4 defaults 0 0" >> /etc/fstab
+	        # change /scratch to /tmp
+	        systemctl unmask tmp.mount
+	        echo "$VOLUME_LIST /tmp ext4 defaults 0 0" >> /etc/fstab
 	    elif [[ $VOLUME_COUNT -gt 1 ]];
 	    then
 	        # if more than 1 instance store disks, raid them !
@@ -96,7 +112,9 @@ else
             echo yes | mdadm --create -f --verbose --level=0 --raid-devices=$VOLUME_COUNT /dev/$DEVICE_NAME ${VOLUME_LIST[@]}
             mkfs -t ext4 /dev/$DEVICE_NAME
             mdadm --detail --scan | tee -a /etc/mdadm.conf
-            echo "/dev/$DEVICE_NAME /scratch ext4 defaults 0 0" >> /etc/fstab
+            # change /scratch to /tmp
+            systemctl unmask tmp.mount
+            echo "/dev/$DEVICE_NAME /tmp ext4 defaults 0 0" >> /etc/fstab
         else
             echo "All volumes detected already have a partition or mount point and can't be used as scratch devices"
 	    fi

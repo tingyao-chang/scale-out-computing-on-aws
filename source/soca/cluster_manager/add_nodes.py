@@ -208,12 +208,13 @@ def can_launch_capacity(instance_type, desired_capacity, image_id, subnet_id, se
                 except NameError:
                     quota_info = {}
 
-                vcpus_check = verify_vcpus_limit(instance, desired_capacity, quota_info)
-                quota_info = vcpus_check["quota_info"]
-                if vcpus_check["message"] is True:
-                    return True
-                else:
-                    return vcpus_check["message"]
+                return True
+                #vcpus_check = verify_vcpus_limit(instance, desired_capacity, quota_info)
+                #quota_info = vcpus_check["quota_info"]
+                #if vcpus_check["message"] is True:
+                #    return True
+                #else:
+                #    return vcpus_check["message"]
             else:
                 print('Dry Run Failed, capacity ' + instance + ' can not be added: ' + str(e), 'error')
                 return str(instance + ' can not be added: ' + str(e))
@@ -622,6 +623,10 @@ def main(**kwargs):
                 'Key': None,
                 'Default': aligo_configuration['EFSDataDns'],
             },
+            'EFSPDKDns': {
+                'Key': None,
+                'Default': aligo_configuration['EFSPDKDns'],
+            },
             'ESDomainEndpoint': {
                 'Key': None,
                 'Default': aligo_configuration['ESDomainEndpoint'],
@@ -670,7 +675,6 @@ def main(**kwargs):
                 'Key': 'anonymous_metrics',
                 'Default': aligo_configuration["DefaultMetricCollection"]
             },
-
             'PlacementGroup': {
                 'Key': 'placement_group',
                 'Default': True
@@ -755,9 +759,17 @@ def main(**kwargs):
                 'Key': 'scratch_iops',
                 'Default': 0
             },
-            'RepositoryIP': {
-                'Key': 'repository_ip',
-                'Default': aligo_configuration['RepositoryIP']
+            'Repository': {
+                'Key': 'repository',
+                'Default': aligo_configuration['Repository']
+            },
+            'FSxLustreFileSystemId': {
+                'Key': 'fsx_lustre_file_system_id',
+                'Default': aligo_configuration['FSxLustreFileSystemId']
+            },
+            'FSxLustreMountName': {
+                'Key': 'fsx_lustre_mount_name',
+                'Default': aligo_configuration['FSxLustreMountName']
             }
         }
 

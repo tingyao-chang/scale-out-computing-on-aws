@@ -61,25 +61,46 @@ def main(**params):
         ltd = LaunchTemplateData("NodeLaunchTemplateData")
         mip = MixedInstancesPolicy()
         stack_name = Ref("AWS::StackName")
-
+        
         # Begin LaunchTemplateData
         UserData = '''#!/bin/bash -x
 export PATH=$PATH:/usr/local/bin
 if [[ "''' + params['BaseOS'] + '''" == "centos7" ]] || [[ "''' + params['BaseOS'] + '''" == "rhel7" ]];
 then
-     mv /etc/yum.repos.d/CentOS-* /tmp
-     cat << EOF > /etc/yum.repos.d/local.repo
-     [local]
-     name=local repository
-     baseurl=http:// '''+ params['RepositoryIP'] +'''
-     gpgcheck=0
-     enabled=1
-     EOF
-     
+     mv /etc/yum.repos.d/* /tmp
+     echo "[base]" >> /etc/yum.repos.d/private.repo
+     echo "name=CentOS-7 - Base" >> /etc/yum.repos.d/private.repo
+     echo "baseurl=http://'''+ params['Repository'] + '''/base" >> /etc/yum.repos.d/private.repo
+     echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+     echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+     echo "[updates]" >> /etc/yum.repos.d/private.repo
+     echo "name=CentOS-7 - Updates" >> /etc/yum.repos.d/private.repo
+     echo "baseurl=http://'''+ params['Repository'] + '''/updates" >> /etc/yum.repos.d/private.repo
+     echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+     echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+     echo "[extras]" >> /etc/yum.repos.d/private.repo
+     echo "name=CentOS-7 - Extras" >> /etc/yum.repos.d/private.repo
+     echo "baseurl=http://'''+ params['Repository'] + '''/extras" >> /etc/yum.repos.d/private.repo
+     echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+     echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+     echo "[centosplus]" >> /etc/yum.repos.d/private.repo
+     echo "name=CentOS-7 - Plus" >> /etc/yum.repos.d/private.repo
+     echo "baseurl=http://'''+ params['Repository'] + '''/centosplus" >> /etc/yum.repos.d/private.repo
+     echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+     echo -e "enabled=0\n" >> /etc/yum.repos.d/private.repo
+     echo "[aws-fsx]" >> /etc/yum.repos.d/private.repo
+     echo "name=AWS FSx Packages  - $basearch" >> /etc/yum.repos.d/private.repo
+     echo "baseurl=http://'''+ params['Repository'] + '''/aws-fsx" >> /etc/yum.repos.d/private.repo
+     echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+     echo "enabled=1" >> /etc/yum.repos.d/private.repo
+
      yum install -y python3-pip
      PIP=$(which pip3)
-     $PIP install awscli
+     #$PIP config --user set global.index-url http://'''+ params['Repository'] +'''/simple
+     #$PIP config --user set global.trusted-host '''+ params['Repository'] +'''
+     $PIP install awscli -i http://'''+ params['Repository'] +'''/simple --trusted-host '''+ params['Repository'] +'''
      yum install -y nfs-utils # enforce install of nfs-utils
+
 else
      yum install -y python3-pip
      PIP=$(which pip3)
@@ -109,6 +130,9 @@ echo export "SOCA_INSTANCE_TYPE=$GET_INSTANCE_TYPE" >> /etc/environment
 echo export "SOCA_INSTANCE_HYPERTHREADING="''' + str(params['ThreadsPerCore']).lower() + '''"" >> /etc/environment
 echo export "SOCA_SYSTEM_METRICS="''' + str(params['SystemMetrics']).lower() + '''"" >> /etc/environment
 echo export "SOCA_ESDOMAIN_ENDPOINT="''' + str(params['ESDomainEndpoint']).lower() + '''"" >> /etc/environment
+echo export "REPOSITORY="''' + params['Repository'] + '''"" >> /etc/environment 
+echo export "SOCA_FSX_LUSTRE_FILE_SYSTEM_ID="''' + str(params['FSxLustreFileSystemId']).lower() + '''"" >> /etc/environment
+echo export "SOCA_FSX_LUSTRE_MOUNT_NAME="''' + str(params['FSxLustreMountName']).lower() + '''"" >> /etc/environment
 
 
 echo export "SOCA_HOST_SYSTEM_LOG="/apps/soca/''' + str(params['ClusterId']) + '''/cluster_node_bootstrap/logs/''' + str(params['JobId']) + '''/$(hostname -s)"" >> /etc/environment
@@ -124,10 +148,11 @@ echo "''' + params['JobOwner'] + ''' ALL=(ALL) /bin/yum" >> /etc/sudoers
 
 mkdir -p /apps
 mkdir -p /data
-
+mkdir -p /pdk
 # Mount EFS
 echo "''' + params['EFSDataDns'] + ''':/ /data nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
 echo "''' + params['EFSAppsDns'] + ''':/ /apps nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
+echo "''' + params['EFSPDKDns'] + ''':/ /pdk nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
 EFS_MOUNT=0
 mount -a 
 while [[ $? -ne 0 ]] && [[ $EFS_MOUNT -lt 5 ]]
@@ -172,10 +197,14 @@ dumpdir /var/run/chrony
 """ > /etc/chrony.conf
 systemctl enable chronyd
 
-# Prepare  Log folder
+# Prepare Log folder
 mkdir -p $SOCA_HOST_SYSTEM_LOG
 echo "@reboot /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/ComputeNodePostReboot.sh >> $SOCA_HOST_SYSTEM_LOG/ComputeNodePostReboot.log 2>&1" | crontab -
 $AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.cfg /root/
+
+# Replace repository FQDN
+sed -i "s/repository-fqdn/$REPOSITORY/g" /root/config.cfg
+
 /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/ComputeNode.sh ''' + params['SchedulerHostname'] + ''' >> $SOCA_HOST_SYSTEM_LOG/ComputeNode.sh.log 2>&1'''
 
         SpotFleet = True if ((params["SpotPrice"] is not False) and (int(params["DesiredCapacity"]) > 1 or len(instances_list)>1)) else False
@@ -217,7 +246,7 @@ $AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.
                 DeviceName="/dev/xvda" if params["BaseOS"] == "amazonlinux2" else "/dev/sda1",
                 Ebs=EBSBlockDevice(
                     VolumeSize=params["RootSize"],
-                    VolumeType="gp2",
+                    VolumeType="gp3",
                     DeleteOnTermination="false" if params["KeepEbs"] is True else "true",
                     Encrypted=True))
         ]
@@ -227,7 +256,7 @@ $AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.
                     DeviceName="/dev/xvdbx",
                     Ebs=EBSBlockDevice(
                         VolumeSize=params["ScratchSize"],
-                        VolumeType="io1" if int(params["VolumeTypeIops"]) > 0 else "gp2",
+                        VolumeType="io2" if int(params["VolumeTypeIops"]) > 0 else "gp3",
                         Iops=params["VolumeTypeIops"] if int(params["VolumeTypeIops"]) > 0 else Ref("AWS::NoValue"),
                         DeleteOnTermination="false" if params["KeepEbs"] is True else "true",
                         Encrypted=True))

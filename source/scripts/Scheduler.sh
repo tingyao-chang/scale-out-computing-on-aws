@@ -9,10 +9,21 @@ if [ $# -lt 2 ]
 fi
 
 # Install SSM
-yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazon-ssm-$AWS_DEFAULT_REGION/latest/linux_amd64/amazon-ssm-agent.rpm
 systemctl enable amazon-ssm-agent
 systemctl restart amazon-ssm-agent
 
+# Install CloudWatch Agent
+if [[ $SOCA_BASE_OS == "centos7" ]]; then
+    yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazoncloudwatch-agent-$AWS_DEFAULT_REGION/centos/amd64/latest/amazon-cloudwatch-agent.rpm
+elif [[ $SOCA_BASE_OS == "rhel7" ]]; then
+    yum install -y https://s3.$AWS_DEFAULT_REGION.amazonaws.com/amazoncloudwatch-agent-$AWS_DEFAULT_REGION/redhat/amd64/latest/amazon-cloudwatch-agent.rpm
+else # Amazon Linux 2
+    yum install -y amazon-cloudwatch-agent
+fi
+
+# Start the CloudWatch Agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/root/amazon-cloudwatch-agent.json
 
 mkdir -p /apps/soca/$SOCA_CONFIGURATION
 EFS_DATA=$1
@@ -34,7 +45,7 @@ yum install -y $(echo ${OPENLDAP_SERVER_PKGS[*]} ${SSSD_PKGS[*]})
 # Mount EFS
 mkdir /apps
 mkdir /data
-echo "$EFS_DATA:/ /data/ nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
+echo "$EFS_DATA:/ /data nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
 echo "$EFS_APPS:/ /apps nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
 mount -a
 
@@ -239,7 +250,7 @@ echo -e "
 dn: cn=sudo,cn=schema,cn=config
 objectClass: olcSchemaConfig
 cn: sudo
-olcAttributeTypes: ( 1.3.6.1.4.1.15953.9.1.1 NAME 'sudoUser' DESC 'User(s) who may  run sudo' EQUALITY caseExactIA5Match SUBSTR caseExactIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: ( 1.3.6.1.4.1.15953.9.1.1 NAME 'sudoUser' DESC 'User(s) who may run sudo' EQUALITY caseExactIA5Match SUBSTR caseExactIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
 olcAttributeTypes: ( 1.3.6.1.4.1.15953.9.1.2 NAME 'sudoHost' DESC 'Host(s) who may run sudo' EQUALITY caseExactIA5Match SUBSTR caseExactIA5SubstringsMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
 olcAttributeTypes: ( 1.3.6.1.4.1.15953.9.1.3 NAME 'sudoCommand' DESC 'Command(s) to be executed by sudo' EQUALITY caseExactIA5Match SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
 olcAttributeTypes: ( 1.3.6.1.4.1.15953.9.1.4 NAME 'sudoRunAs' DESC 'User(s) impersonated by sudo (deprecated)' EQUALITY caseExactIA5Match SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
@@ -285,6 +296,30 @@ ou: Group
 " > base.ldif
 
 /bin/ldapadd -x -W -y /root/OpenLdapAdminPassword.txt -D "cn=admin,$LDAP_BASE" -f base.ldif
+
+# Add ldap audit log
+mkdir -p /var/log/openldap/
+chown -R ldap:ldap /var/log/openldap/
+
+echo -e "
+dn: cn=module,cn=config
+cn: module 
+objectClass: olcModuleList
+olcModulePath: /usr/lib64/openldap
+olcModuleLoad: auditlog.la
+" > loadmodule.ldif
+
+echo -e "
+dn: olcOverlay=auditlog,olcDatabase={2}hdb,cn=config
+changetype: add
+objectClass: olcOverlayConfig
+objectClass: olcAuditLogConfig
+olcOverlay: auditlog
+olcAuditlogFile: /var/log/openldap/auditlog.ldif
+" > applyoverlay.ldif
+
+/bin/ldapadd -Y EXTERNAL -H ldapi:/// -f loadmodule.ldif
+/bin/ldapadd -Y EXTERNAL -H ldapi:/// -f applyoverlay.ldif
 
 authconfig \
     --enablesssd \
@@ -354,7 +389,7 @@ echo "UserKnownHostsFile /dev/null" >> /etc/ssh/ssh_config
 
 # Install Python required libraries
 # Source environment to reload path for Python3
-/apps/soca/$SOCA_CONFIGURATION/python/$PYTHON_VERSION/bin/pip3 install -r /root/requirements.txt
+/apps/soca/$SOCA_CONFIGURATION/python/$PYTHON_VERSION/bin/pip3 install -r /root/requirements.txt -i http://$REPOSITORY/python-$PYTHON_VERSION --trusted-host $REPOSITORY
 
 # Configure Chrony
 yum remove -y ntp

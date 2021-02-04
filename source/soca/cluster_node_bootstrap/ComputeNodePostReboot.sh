@@ -46,12 +46,12 @@ Compute Node Ready for queue: $SOCA_JOB_QUEUE
 
 # Configure FSx if specified by the user.
 # Right before the reboot to minimize the time to wait for FSx to be AVAILABLE
-if [[ "$SOCA_FSX_LUSTRE_BUCKET" != 'false' ]] || [[ "$SOCA_FSX_LUSTRE_DNS" != 'false' ]] ; then
+if [[ "$SOCA_FSX_LUSTRE_BUCKET" != 'false' ]] || [[ "$SOCA_FSX_LUSTRE_DNS" != 'false' ]] || [[ "$SOCA_FSX_LUSTRE_FILE_SYSTEM_ID" != 'false' ]]; then
     echo "FSx request detected, installing FSX Lustre client ... "
     FSX_MOUNTPOINT="/fsx"
     mkdir -p $FSX_MOUNTPOINT
 
-    if [[ "$SOCA_FSX_LUSTRE_DNS" == 'false' ]]; then
+    if [[ "$SOCA_FSX_LUSTRE_DNS" == 'false' ]] && [[ "$SOCA_FSX_LUSTRE_FILE_SYSTEM_ID" == 'false' ]]; then
         # Retrieve FSX DNS assigned to this job
         FSX_ARN=$($AWS resourcegroupstaggingapi get-resources --tag-filters  "Key=soca:FSx,Values=true" "Key=soca:StackId,Values=$AWS_STACK_ID" --query ResourceTagMappingList[].ResourceARN --output text)
         echo "GET_FSX_ARN: " $FSX_ARN
@@ -84,10 +84,17 @@ if [[ "$SOCA_FSX_LUSTRE_BUCKET" != 'false' ]] || [[ "$SOCA_FSX_LUSTRE_DNS" != 'f
         fi
     else
         # Using persistent FSX provided by customer
-        echo "Detected existing FSx provided by customers " $SOCA_FSX_LUSTRE_DNS
-        FSX_ID=$(echo $SOCA_FSX_LUSTRE_DNS | cut -d. -f1)
-        GET_FSX_MOUNT_NAME=$($AWS fsx describe-file-systems --file-system-ids $FSX_ID  --query FileSystems[].LustreConfiguration.MountName --output text)
-        echo "$SOCA_FSX_LUSTRE_DNS@tcp:/$GET_FSX_MOUNT_NAME $FSX_MOUNTPOINT lustre defaults,noatime,flock,_netdev 0 0" >> /etc/fstab
+        if [[ "$SOCA_FSX_LUSTRE_DNS" != 'false' ]]; then
+            echo "Detected existing FSx provided by customers " $SOCA_FSX_LUSTRE_DNS
+            FSX_ID=$(echo $SOCA_FSX_LUSTRE_DNS | cut -d. -f1)
+            GET_FSX_MOUNT_NAME=$($AWS fsx describe-file-systems --file-system-ids $FSX_ID  --query FileSystems[].LustreConfiguration.MountName --output text)
+            echo "$SOCA_FSX_LUSTRE_DNS@tcp:/$GET_FSX_MOUNT_NAME $FSX_MOUNTPOINT lustre defaults,noatime,flock,_netdev 0 0" >> /etc/fstab
+        # Using pre-built FSx for Lustre in SOCA template
+        else
+            PREBUILT_FSX_DNS=$SOCA_FSX_LUSTRE_FILE_SYSTEM_ID".fsx."$AWS_DEFAULT_REGION".amazonaws.com"
+            echo "Detected existing FSx provided by customers " $PREBUILT_FSX_DNS
+            echo "$PREBUILT_FSX_DNS@tcp:/$SOCA_FSX_LUSTRE_MOUNT_NAME $FSX_MOUNTPOINT lustre defaults,noatime,flock,_netdev 0 0" >> /etc/fstab
+        fi
     fi
 
     # Install FSx for Lustre Client
@@ -118,9 +125,9 @@ if [[ "$SOCA_FSX_LUSTRE_BUCKET" != 'false' ]] || [[ "$SOCA_FSX_LUSTRE_DNS" != 'f
             yum install -y kmod-lustre-client lustre-client
             REQUIRE_REBOOT=1
         elif [[ $kernel == *"3.10.0-1160"*$machine ]]; then
-            wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
-            rpm --import /tmp/fsx-rpm-public-key.asc
-            wget https://fsx-lustre-client-repo.s3.amazonaws.com/el/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
+            #wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
+            #rpm --import /tmp/fsx-rpm-public-key.asc
+            #wget https://fsx-lustre-client-repo.s3.amazonaws.com/el/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
             yum clean all
             yum install -y kmod-lustre-client lustre-client
             REQUIRE_REBOOT=1

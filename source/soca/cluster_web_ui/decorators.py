@@ -132,3 +132,18 @@ def admin_only(f):
             return redirect('/login')
 
     return check_admin
+
+# Views restricted to reviewer
+def reviewer_only(f):
+    @wraps(f)
+    def check_reviewer():
+        if "reviewer" in session:
+            if session["reviewer"] is True:
+                return f()
+            else:
+                flash("Sorry this page requires reviewer privileges.", "error")
+                return redirect("/")
+        else:
+            return redirect('/login')
+
+    return check_reviewer

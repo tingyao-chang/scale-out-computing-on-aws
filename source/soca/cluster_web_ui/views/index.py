@@ -62,6 +62,7 @@ def authenticate():
             return redirect('/login')
         else:
             session['user'] = user.lower()
+            session['reviewer'] = False
             logger.info("User authenticated, checking sudo permissions")
             check_sudo_permission = get(config.Config.FLASK_ENDPOINT + '/api/ldap/sudo',
                                         headers={"X-SOCA-TOKEN": config.Config.API_ROOT_KEY},
@@ -71,6 +72,19 @@ def authenticate():
                 session["sudoers"] = True
             else:
                 session["sudoers"] = False
+
+            check_group = get(config.Config.FLASK_ENDPOINT + "/api/ldap/group",
+                              headers={"X-SOCA-TOKEN": config.Config.API_ROOT_KEY, "X-SOCA-USER": user},
+                              params={"group": config.Config.TICKET_REVIEWER_GROUP},
+                              verify=False)
+            if check_group.status_code == 200:
+                members = check_group.json()["message"]["members"]
+                for reviewer in members:
+                    if reviewer == user:
+                        session["reviewer"] = True
+                        break
+                    else:
+                        session["reviewer"] = False
 
             if redirect_path is not None:
                 return redirect(redirect_path)

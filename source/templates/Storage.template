@@ -30,6 +30,14 @@ Parameters:
     Type: String
     Default: 2000000000000
 
+  StorageCapacity:
+    Type: String
+    Default: 1200
+
+  DeploymentType:
+    Type: String
+    Default: SCRATCH_2
+
 Resources:
   EFSApps:
     Type: AWS::EFS::FileSystem
@@ -53,7 +61,7 @@ Resources:
         - !Ref SchedulerSecurityGroup
         - !Ref ComputeNodeSecurityGroup
 
-  AppsaMountTarget2:
+  AppsMountTarget2:
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId: !Ref EFSApps
@@ -113,6 +121,47 @@ Resources:
         - !Ref SchedulerSecurityGroup
         - !Ref ComputeNodeSecurityGroup
 
+  EFSPDK:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: True
+      LifecyclePolicies:
+         - TransitionToIA: AFTER_30_DAYS
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${ClusterId}-EFSPDK
+        - Key: soca:ClusterId
+          Value: !Ref ClusterId
+        - Key: soca:BackupPlan
+          Value: !Sub ${ClusterId}
+      ThroughputMode: bursting
+
+  PDKMountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSPDK
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroups:
+        - !Ref SchedulerSecurityGroup
+        - !Ref ComputeNodeSecurityGroup
+
+  PDKMountTarget2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSPDK
+      SubnetId: !Ref PrivateSubnet2
+      SecurityGroups:
+        - !Ref SchedulerSecurityGroup
+        - !Ref ComputeNodeSecurityGroup
+
+  PDKMountTarget3:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EFSPDK
+      SubnetId: !Ref PrivateSubnet3
+      SecurityGroups:
+        - !Ref SchedulerSecurityGroup
+        - !Ref ComputeNodeSecurityGroup
 
   SNSEFSTopic:
     Metadata:
@@ -243,7 +292,6 @@ Resources:
                 Resource:
                   - !Join [ "", [ "arn:", !Ref "AWS::Partition", ":elasticfilesystem:", !Ref "AWS::Region", ":", !Ref  "AWS::AccountId", ":file-system/*"] ]
 
-
   EFSThroughputLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -316,6 +364,25 @@ Resources:
       FunctionName: !Ref EFSThroughputLambda
       Principal: sns.amazonaws.com
 
+  # Lustre
+  LustreFileSystem:
+    Type: AWS::FSx::FileSystem
+    Properties:
+      FileSystemType: "LUSTRE"
+      StorageCapacity: !Ref StorageCapacity
+      SubnetIds:
+        - !Ref PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroup
+        - !Ref ComputeNodeSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterId}-FSx_Lustre
+        - Key: soca:ClusterId
+          Value: !Ref ClusterId
+      LustreConfiguration:
+        DeploymentType: !Ref DeploymentType
+
 Outputs:
   EFSApps:
     Value: !Ref EFSApps
@@ -329,5 +396,17 @@ Outputs:
   EFSDataDns:
     Value: !Join [ ".", [ !Ref EFSData, 'efs', !Ref "AWS::Region", !Ref "AWS::URLSuffix"] ]
 
+  EFSPDK:
+    Value: !Ref EFSPDK
+
+  EFSPDKDns:
+    Value: !Join [ ".", [ !Ref EFSPDK, 'efs', !Ref "AWS::Region", !Ref "AWS::URLSuffix"] ]
+
   EFSMountParameters:
-     Value: 'nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport'
+    Value: 'nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport'
+
+  FSxLustreFileSystemId:
+    Value: !Ref LustreFileSystem
+
+  FSxLustreMountName:
+    Value: !GetAtt LustreFileSystem.LustreMountName

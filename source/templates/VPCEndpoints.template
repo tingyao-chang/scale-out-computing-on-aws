@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: (SOCA) - Deploy VPCEndpoints.
+Parameters:
+  VpcId:
+    Type: String
+  SubnetId:
+    Type: String
+  PublicRouteTableId:
+    Type: String
+  PrivateRouteTableId:
+    Type: String
+  SchedulerSecurityGroupId:
+    Type: String
+  ComputeNodeSecurityGroupId:
+    Type: String
+
+Resources:
+  AutoScalingVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.autoscaling'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  CloudFormationVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.cloudformation'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+  
+  EC2VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+  
+  EC2MessagesVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2messages'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  ELBEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.elasticloadbalancing'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  CloudWatchLogsVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.logs'
+      SubnetIds:
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+
+  SecretManagerVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.secretsmanager'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+  
+  SSMVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+  
+  SSMMessagesVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      PrivateDnsEnabled: True
+      SecurityGroupIds:
+        - !Ref SchedulerSecurityGroupId
+        - !Ref ComputeNodeSecurityGroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssmmessages'
+      SubnetIds: 
+        - !Ref SubnetId
+      VpcEndpointType: Interface
+      VpcId: !Ref VpcId
+  
+  S3VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties: 
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      RouteTableIds: 
+        - !Ref PublicRouteTableId
+        - !Ref PrivateRouteTableId
+      VpcId: !Ref VpcId
