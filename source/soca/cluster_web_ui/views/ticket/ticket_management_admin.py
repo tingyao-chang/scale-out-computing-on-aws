@@ -73,7 +73,7 @@ def approve_ticket():
             },
             ExpressionAttributeNames={
                 "#ts": "status",
-                "#u": "update"
+                "#u": "adminupdate"
             },
             ReturnValues = "ALL_NEW"
         )
