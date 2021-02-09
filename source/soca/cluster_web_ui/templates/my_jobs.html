@@ -85,9 +85,6 @@
                                                {% if job_data.job_state != 'E' %}
                                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#delete{{ job_id.split(".")[0] }}">Kill</button>
                                                {% endif %}
-                                               {% if job_data.Variable_List.PBS_O_WORKDIR %}
-                                                   <a target="_blank" href="/my_files?path={{ job_data.Variable_List.PBS_O_WORKDIR  }}"><button type="button" class="btn btn-warning">Job Directory</button></a>
-                                               {% endif %}
 
                                                {% if job_data.Resource_List.error_message %}
                                                    <button type="button" class="btn btn-info" data-toggle="modal" data-target="#error{{ job_id.split(".")[0] }}"><i class="fas fa-exclamation-triangle"></i> JOB CANNOT START</button>

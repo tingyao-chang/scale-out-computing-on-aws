@@ -115,9 +115,7 @@
 
 					<div class="form-group">
                                             <label for="ticket_update" data-toggle="tooltip" data-placement="top" title="Update status for this ticket" >Status Update</label>
-                                            <input id="ticket_update" placeholder="Update ticket status by system admin"
-                                                   class="form-control" type="text"
-                                                   required name="ticket_update">
+					    <textarea class="form-control" id="ticket_update" rows="5" placeholder="Update status for this ticket" type="text" required name="ticket_update"></textarea>
                                         </div>
 
                                         <div align="justify">
@@ -216,7 +214,15 @@
                                                           </button>
                                                       </div>
                                                       <div class="modal-body container">
-                                                          <strong>{{ ticket }}</strong>: hello<br>
+							  <strong>Username: </strong>{{ ticket['username'] }}<br>
+							  <strong>Status: </strong>{{ ticket['status'] }}<br>
+                                                          <strong>Catalog: </strong>{{ ticket['catalog'] }}<br>
+                                                          <strong>severity: </strong>{{ ticket['severity'] }}<br>
+                                                          <strong>Title: </strong>{{ ticket['title'] }}<br>
+                                                          <strong>Description: </strong>{{ ticket['description'] }}<br>
+                                                          <strong>User update: </strong>{{ ticket['userupdate'] }}<br>
+                                                          <hr class="sidebar-divider d-none d-md-block">
+                                                          <strong>Admin Update: </strong>{{ ticket['adminupdate'] }}<br>
                                                           </div>
                                                           <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
