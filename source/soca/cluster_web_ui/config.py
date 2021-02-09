@@ -19,7 +19,7 @@ class Config(object):
     SECRET_KEY = os.environ["SOCA_FLASK_SECRET_KEY"]
     API_ROOT_KEY = os.environ["SOCA_FLASK_API_ROOT_KEY"]
     SOCA_DATA_SHARING_SYMMETRIC_KEY = os.environ["SOCA_FLASK_FERNET_KEY"]
-    TIMEZONE = "UTC"  # Change to match your local timezone if needed. See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for all TZ
+    TIMEZONE = "Asia/Taipei"  # Change to match your local timezone if needed. See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for all TZ
 
     # WEB
     APPS_LOCATION = "/apps/"
