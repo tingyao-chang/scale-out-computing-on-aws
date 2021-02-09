@@ -130,7 +130,7 @@ if [[ "$SOCA_FSX_LUSTRE_BUCKET" != 'false' ]] || [[ "$SOCA_FSX_LUSTRE_DNS" != 'f
             #wget https://fsx-lustre-client-repo.s3.amazonaws.com/el/7/fsx-lustre-client.repo -O /etc/yum.repos.d/aws-fsx.repo
             yum clean all
             yum install -y kmod-lustre-client lustre-client
-            REQUIRE_REBOOT=1
+            #REQUIRE_REBOOT=1
         elif [[ $kernel == *"4.18.0-193"*$machine ]]; then
             # FSX for Lustre on aarch64 is supported only on 4.18.0-193
             wget https://fsx-lustre-client-repo-public-keys.s3.amazonaws.com/fsx-rpm-public-key.asc -O /tmp/fsx-rpm-public-key.asc
@@ -143,7 +143,6 @@ if [[ "$SOCA_FSX_LUSTRE_BUCKET" != 'false' ]] || [[ "$SOCA_FSX_LUSTRE_DNS" != 'f
             echo "ERROR: Can't install FSx for Lustre client as kernel version: ${kernel} isn't matching expected versions: (x86_64: 3.10.0-957, -1062, -1127, -1160, aarch64: 4.18.0-193)!"
         fi
     fi
-
 fi
 
 # Tag EBS disks manually as CFN ASG does not support it
@@ -242,4 +241,3 @@ else
     # Post-Boot routine completed, starting PBS
     systemctl start pbs
 fi
-
