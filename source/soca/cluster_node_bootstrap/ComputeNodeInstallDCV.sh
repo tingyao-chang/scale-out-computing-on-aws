@@ -21,6 +21,7 @@ then
 else
   # Centos7
   yum groupinstall "GNOME Desktop" -y
+  systemctl enable gdm
 fi
 
 # Automatic start Gnome upon reboot
