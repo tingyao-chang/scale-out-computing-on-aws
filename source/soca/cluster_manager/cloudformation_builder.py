@@ -68,26 +68,31 @@ export PATH=$PATH:/usr/local/bin
 if [[ "''' + params['BaseOS'] + '''" == "centos7" ]] || [[ "''' + params['BaseOS'] + '''" == "rhel7" ]];
 then
      mv /etc/yum.repos.d/* /tmp
+
      echo "[base]" >> /etc/yum.repos.d/private.repo
      echo "name=CentOS-7 - Base" >> /etc/yum.repos.d/private.repo
      echo "baseurl=http://'''+ params['Repository'] + '''/base" >> /etc/yum.repos.d/private.repo
      echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
      echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+
      echo "[updates]" >> /etc/yum.repos.d/private.repo
      echo "name=CentOS-7 - Updates" >> /etc/yum.repos.d/private.repo
      echo "baseurl=http://'''+ params['Repository'] + '''/updates" >> /etc/yum.repos.d/private.repo
      echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
      echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+
      echo "[extras]" >> /etc/yum.repos.d/private.repo
      echo "name=CentOS-7 - Extras" >> /etc/yum.repos.d/private.repo
      echo "baseurl=http://'''+ params['Repository'] + '''/extras" >> /etc/yum.repos.d/private.repo
      echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
      echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
-     echo "[centosplus]" >> /etc/yum.repos.d/private.repo
-     echo "name=CentOS-7 - Plus" >> /etc/yum.repos.d/private.repo
-     echo "baseurl=http://'''+ params['Repository'] + '''/centosplus" >> /etc/yum.repos.d/private.repo
+
+     echo "[epel]" >> /etc/yum.repos.d/private.repo
+     echo "name=Extra Packages for Enterprise Linux 7" >> /etc/yum.repos.d/private.repo
+     echo "baseurl=http://'''+ params['Repository'] + '''/epel" >> /etc/yum.repos.d/private.repo
      echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
-     echo -e "enabled=0\n" >> /etc/yum.repos.d/private.repo
+     echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+
      echo "[aws-fsx]" >> /etc/yum.repos.d/private.repo
      echo "name=AWS FSx Packages  - $basearch" >> /etc/yum.repos.d/private.repo
      echo "baseurl=http://'''+ params['Repository'] + '''/aws-fsx" >> /etc/yum.repos.d/private.repo
@@ -96,8 +101,6 @@ then
 
      yum install -y python3-pip
      PIP=$(which pip3)
-     #$PIP config --user set global.index-url http://'''+ params['Repository'] +'''/simple
-     #$PIP config --user set global.trusted-host '''+ params['Repository'] +'''
      $PIP install awscli -i http://'''+ params['Repository'] +'''/simple --trusted-host '''+ params['Repository'] +'''
      yum install -y nfs-utils # enforce install of nfs-utils
 
@@ -106,6 +109,7 @@ else
      PIP=$(which pip3)
      $PIP install awscli
 fi
+
 if [[ "''' + params['BaseOS'] + '''" == "amazonlinux2" ]];
     then
         /usr/sbin/update-motd --disable
@@ -134,17 +138,12 @@ echo export "REPOSITORY="''' + params['Repository'] + '''"" >> /etc/environment
 echo export "SOCA_FSX_LUSTRE_FILE_SYSTEM_ID="''' + str(params['FSxLustreFileSystemId']).lower() + '''"" >> /etc/environment
 echo export "SOCA_FSX_LUSTRE_MOUNT_NAME="''' + str(params['FSxLustreMountName']).lower() + '''"" >> /etc/environment
 
-
 echo export "SOCA_HOST_SYSTEM_LOG="/apps/soca/''' + str(params['ClusterId']) + '''/cluster_node_bootstrap/logs/''' + str(params['JobId']) + '''/$(hostname -s)"" >> /etc/environment
 echo export "AWS_STACK_ID=${AWS::StackName}" >> /etc/environment
 echo export "AWS_DEFAULT_REGION=${AWS::Region}" >> /etc/environment
 
-
 source /etc/environment
 AWS=$(which aws)
-
-# Give yum permission to the user on this specific machine
-echo "''' + params['JobOwner'] + ''' ALL=(ALL) /bin/yum" >> /etc/sudoers
 
 mkdir -p /apps
 mkdir -p /data
