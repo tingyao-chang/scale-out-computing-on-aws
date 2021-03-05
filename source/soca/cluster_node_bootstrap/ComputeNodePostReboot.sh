@@ -241,3 +241,7 @@ else
     # Post-Boot routine completed, starting PBS
     systemctl start pbs
 fi
+
+# Unmount /apps after execution of ComputeNotePostReboot.sh
+echo "sed -i '/apps/d' /etc/fstab" | at now + 1 minutes
+echo "umount /apps" | at now + 1 minutes
