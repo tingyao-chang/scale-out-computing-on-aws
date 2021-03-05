@@ -10,3 +10,5 @@ echo "
 -a exit,always -F arch=b64 -F euid=0 -S execve
 -a exit,always -F arch=b32 -F euid=0 -S execve
 " >> /etc/audit/rules.d/audit.rules
+
+service auditd restart
