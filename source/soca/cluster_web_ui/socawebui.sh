@@ -64,7 +64,7 @@ case "$1" in
             if [[ ! -f dcv_secret_key.txt ]]; then
                 echo 'No dcv Key detected, creating new one ...'
                 # /!\ ATTENTION
-                # DCV Secret Key used to authenticate DCV sessions via /api/system/dcv_authenticator.
+                # DCV Secret Key used to authenticate DCV sessions via /api/dcv/authenticator.
                 # If you delete/change this value, your existing sessions will become inaccessible and your user must re-create them
                 dd if=/dev/urandom bs=32 count=1 2>/dev/null | openssl base64 > dcv_secret_key.txt
                 chmod 600 dcv_secret_key.txt

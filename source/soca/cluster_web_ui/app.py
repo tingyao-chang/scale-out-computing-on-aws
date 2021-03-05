@@ -16,7 +16,6 @@ from api.v1.user.api_key import ApiKey
 from api.v1.ldap.group import Group
 from api.v1.ldap.groups import Groups
 from api.v1.ldap.authenticate import Authenticate
-from api.v1.system.files import Files
 from api.v1.system.aws_price import AwsPrice
 from api.v1.dcv.authenticator import DcvAuthenticator
 from views.index import index
@@ -192,7 +191,6 @@ with app.app_context():
     api.add_resource(ApiKey, '/api/user/api_key')
     api.add_resource(Reset, '/api/user/reset_password')
     # System
-    api.add_resource(Files, '/api/system/files')
     api.add_resource(AwsPrice, '/api/system/aws_price')
     api.add_resource(DcvAuthenticator, '/api/dcv/authenticator')
     # Scheduler
