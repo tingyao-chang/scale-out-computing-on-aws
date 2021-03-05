@@ -98,6 +98,14 @@ os-auto-lock=false
 enabled=false
 """ > /etc/dcv/dcv.conf
 
+mv /etc/dcv/default.perm /etc/dcv/default.perm.orig
+
+echo -e """[groups]
+[aliases]
+[permissions]
+%any% deny clipboard-copy clipboard-paste file-download file-upload usb printer smartcard
+""" > /etc/dcv/default.perm
+
 # Start DCV server
 sudo systemctl enable dcvserver
 sudo systemctl stop dcvserver
