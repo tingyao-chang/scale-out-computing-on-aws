@@ -19,8 +19,6 @@ from api.v1.ldap.authenticate import Authenticate
 from api.v1.system.aws_price import AwsPrice
 from api.v1.dcv.authenticator import DcvAuthenticator
 from views.index import index
-from views.ssh import ssh
-from views.sftp import sftp
 from views.my_api_key import my_api_key
 from views.admin.users import admin_users
 from views.admin.queues import admin_queues
@@ -34,7 +32,6 @@ from views.my_jobs import my_jobs
 from views.my_activity import my_activity
 from views.dashboard import dashboard
 from views.remote_desktop import remote_desktop
-from views.remote_desktop_windows import remote_desktop_windows
 from views.my_account import my_account
 from scheduled_tasks.clean_tmp_folders import clean_tmp_folders
 from scheduled_tasks.manage_dcv_instances_lifecycle import auto_terminate_stopped_instance, schedule_auto_start, schedule_auto_stop
@@ -211,11 +208,8 @@ with app.app_context():
     app.register_blueprint(ticket_support_center)
     app.register_blueprint(ticket_ticket_management)
     app.register_blueprint(ticket_ticket_management_admin)
-    app.register_blueprint(ssh)
-    app.register_blueprint(sftp)
     app.register_blueprint(my_jobs)
     app.register_blueprint(remote_desktop)
-    app.register_blueprint(remote_desktop_windows)
     app.register_blueprint(dashboard)
     app.register_blueprint(my_activity)
     logging.config.dictConfig(dict_config)
