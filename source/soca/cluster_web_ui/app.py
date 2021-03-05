@@ -37,8 +37,6 @@ from views.dashboard import dashboard
 from views.remote_desktop import remote_desktop
 from views.remote_desktop_windows import remote_desktop_windows
 from views.my_account import my_account
-from views.my_files import my_files
-from views.submit_job import submit_job
 from scheduled_tasks.clean_tmp_folders import clean_tmp_folders
 from scheduled_tasks.manage_dcv_instances_lifecycle import auto_terminate_stopped_instance, schedule_auto_start, schedule_auto_stop
 from flask_wtf.csrf import CSRFProtect
@@ -215,8 +213,6 @@ with app.app_context():
     app.register_blueprint(ticket_support_center)
     app.register_blueprint(ticket_ticket_management)
     app.register_blueprint(ticket_ticket_management_admin)
-    app.register_blueprint(my_files)
-    app.register_blueprint(submit_job)
     app.register_blueprint(ssh)
     app.register_blueprint(sftp)
     app.register_blueprint(my_jobs)
