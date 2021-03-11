@@ -64,7 +64,7 @@
                                               </div><!--end  terminate  -->
 
                                           <div class="card-header py-3">
-                                              <h6 class="m-0 font-weight-bold text-primary"><i data-toggle="tooltip" data-placement="top" title="Troubleshooting: EC2 tag is {{ session_data.tag_uuid }}, instance ID is  {{ session_data.session_instance_id }}" class="fas fa-question-circle"></i> Linux Session #{{ n }}
+                                              <h6 class="m-0 font-weight-bold text-primary"><i data-toggle="tooltip" data-placement="top" title="Troubleshooting: EC2 tag is {{ session_data.tag_uuid }}, instance ID is  {{ session_data.session_instance_id }}" class="fas fa-question-circle"></i> Linux Session #{{ n }}: {{ session_data.session_hostname }}
                                                   {% if session_data.session_state == 'running' %}
                                                       <div class="float-right"><button class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#schedule{{ n }}">Schedule</button>
                                                            {% if session_data.support_hibernation == true %}

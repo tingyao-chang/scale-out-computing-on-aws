@@ -144,6 +144,7 @@ def index():
         support_hibernation = session_info.support_hibernation
         dcv_authentication_token = session_info.dcv_authentication_token
         session_id = session_info.session_id
+        session_hostname = session_host_private_dns.split(".")[0]
         session_schedule = {
             "monday": str(session_info.schedule_monday_start) + "-" + str(session_info.schedule_monday_stop),
             "tuesday": str(session_info.schedule_tuesday_start) + "-" + str(session_info.schedule_tuesday_stop),
@@ -229,7 +230,8 @@ def index():
             "session_instance_type": session_instance_type,
             "tag_uuid": tag_uuid,
             "support_hibernation": support_hibernation,
-            "session_schedule": session_schedule}
+            "session_schedule": session_schedule,
+            "session_hostname": session_hostname}
 
     max_number_of_sessions = config.Config.DCV_LINUX_SESSION_COUNT
     # List of instances not available for DCV. Adjust as needed
