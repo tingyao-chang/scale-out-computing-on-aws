@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: (SOCA) - Manage ELK stack
+Parameters:
+  SchedulerSecurityGroup:
+    Type: String
+
+  Privateubnet1:
+    Type: String
+  
+  PrivateSubnet2:
+    Type: String
+  
+  ClusterId:
+    Type: String
+
+Resources:
+  ElasticsearchDomain:
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: "Domain Name is required if we want to restrict AccessPolicies to this resource only"
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      ElasticsearchVersion: 7.4
+      DomainName: !Sub ${ClusterId}
+      NodeToNodeEncryptionOptions:
+         Enabled: True
+      EncryptionAtRestOptions:
+         Enabled: True
+      EBSOptions:
+        VolumeSize: 100
+        VolumeType: gp2
+        EBSEnabled: true
+      ElasticsearchClusterConfig:
+        InstanceCount: 2
+        InstanceType: m5.large.elasticsearch
+        ZoneAwarenessEnabled: True
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: '0'
+      AccessPolicies:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: '*'
+            Action: 'es:ESHttp*'
+            Resource: !Sub 'arn:${AWS::Partition}:es:${AWS::Region}:${AWS::AccountId}:domain/${ClusterId}/*'
+      AdvancedOptions:
+        rest.action.multi.allow_explicit_index: 'true'
+      Tags:
+        - Key: Name
+          Value: !Sub ${ClusterId}-analytics
+        - Key: soca:ClusterId
+          Value: !Ref ClusterId
+      VPCOptions:
+        SubnetIds:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+
+Outputs:
+  ESDomainArn:
+    Value: !GetAtt ElasticsearchDomain.DomainArn
+  ESDomainEndpoint:
+    Value: !GetAtt ElasticsearchDomain.DomainEndpoint

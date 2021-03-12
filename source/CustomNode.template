@@ -1,0 +1,215 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: (SOCA) - Deploy Customized Node.
+Parameters:
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+
+  SecurityGroupId:
+    Type: String
+
+  SSHKeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+
+  InstanceType:
+    Type: String
+    Default: m5.large
+
+  IAMInstanceProfile:
+    Type: String
+
+  S3InstallFolder:
+    Type: String
+
+  S3Bucket:
+    Type: String
+
+  ClusterId:
+    Type: String
+
+  EFSAppsDns:
+    Type: String
+
+  EFSDataDns:
+    Type: String
+
+  ImageId:
+    Type: String
+    Default: ami-0ddea5e0f69c193a4
+
+  BaseOS:
+    Type: String
+    Default: centos7
+
+  Repository:
+    Type: String
+
+  NodeType:
+    Type: String
+    Default: dcv
+    Description: If you need install dcv, enter dcv, otherwise enter other value.
+
+  Usage:
+    Type: String
+  
+  SchedulerPrivateDnsName:
+    Type: String
+    
+  UserName:
+    Type: String
+
+Resources:
+  EC2Host:
+    Type: AWS::EC2::Instance
+    Properties:
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            VolumeSize: 10
+            VolumeType: gp3
+      IamInstanceProfile: !Ref IAMInstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !Ref SecurityGroupId
+      SubnetId: !Ref SubnetId
+      UserData:
+          "Fn::Base64": !Sub |
+            #!/bin/bash -xe
+            
+            # Install SSM
+            yum install -y https://s3.${AWS::Region}.amazonaws.com/amazon-ssm-${AWS::Region}/latest/linux_amd64/amazon-ssm-agent.rpm
+            systemctl enable amazon-ssm-agent
+            systemctl restart amazon-ssm-agent
+            
+            export PATH=$PATH:/usr/local/bin
+            if [ "${BaseOS}" == "centos7" ] || [ "${BaseOS}" == "rhel7" ];
+            then
+                mv /etc/yum.repos.d/* /tmp
+                
+                echo "[base]" >> /etc/yum.repos.d/private.repo
+                echo "name=CentOS-7 - Base" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/base" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+                
+                echo "[updates]" >> /etc/yum.repos.d/private.repo
+                echo "name=CentOS-7 - Updates" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/updates" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+                
+                echo "[extras]" >> /etc/yum.repos.d/private.repo
+                echo "name=CentOS-7 - Extras" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/extras" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+                
+                echo "[epel]" >> /etc/yum.repos.d/private.repo
+                echo "name=Extra Packages for Enterprise Linux 7" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/epel" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+                
+                echo "[aws-fsx]" >> /etc/yum.repos.d/private.repo
+                echo "name=AWS FSx Packages  - $basearch" >> /etc/yum.repos.d/private.repo
+                echo "baseurl=http://${Repository}/aws-fsx" >> /etc/yum.repos.d/private.repo
+                echo "gpgcheck=0" >> /etc/yum.repos.d/private.repo
+                echo -e "enabled=1\n" >> /etc/yum.repos.d/private.repo
+
+                yum install -y python3-pip
+                PIP=$(which pip3)
+                $PIP install awscli -i http://${Repository}/simple --trusted-host ${Repository}
+                yum install -y nfs-utils # enforce install of nfs-utils
+            else
+                yum install -y python3-pip
+                PIP=$(which pip3)
+                $PIP install awscli
+            fi
+            if [ "${BaseOS}" == "amazonlinux2" ];
+                then
+                    /usr/sbin/update-motd --disable
+            fi
+                
+            echo export "SOCA_CONFIGURATION=${ClusterId}" >> /etc/environment
+            echo export "SOCA_BASE_OS=${BaseOS}" >> /etc/environment
+            echo export "SOCA_JOB_TYPE=${NodeType}" >> /etc/environment
+            echo export "SOCA_DCV_OWNER=${UserName}" >> /etc/environment
+            echo export "SOCA_DCV_SESSION_ID=my-session" >> /etc/environment
+            echo export "SOCA_INSTALL_BUCKET=${S3Bucket}" >> /etc/environment
+            echo export "SOCA_INSTALL_BUCKET_FOLDER=${S3InstallFolder}" >> /etc/environment
+            echo export "SOCA_HOST_SYSTEM_LOG=/apps/soca/${ClusterId}/cluster_node_bootstrap/logs/desktop/${Usage}/$(hostname -s)" >> /etc/environment
+            echo export "AWS_DEFAULT_REGION=${AWS::Region}" >> /etc/environment
+            echo export "REPOSITORY=${Repository}" >> /etc/environment
+
+            source /etc/environment
+            AWS=$(which aws)
+
+            mkdir -p /apps
+            mkdir -p /data
+
+            # Mount EFS
+            echo "${EFSDataDns}:/ /data nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
+            echo "${EFSAppsDns}:/ /apps nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 0 0" >> /etc/fstab
+            EFS_MOUNT=0
+            mount -a 
+            while [ $? -ne 0 ] && [ $EFS_MOUNT -lt 5 ]
+              do
+                SLEEP_TIME=$(( RANDOM % 60 ))
+                echo "Failed to mount EFS, retrying in $SLEEP_TIME seconds and Loop $EFS_MOUNT/5..."
+                sleep $SLEEP_TIME
+                ((EFS_MOUNT++))
+                mount -a
+              done
+
+            # Configure Chrony
+            yum remove -y ntp
+            yum install -y chrony
+            mv /etc/chrony.conf  /etc/chrony.conf.original
+            echo -e """
+            # use the local instance NTP service, if available
+            server 169.254.169.123 prefer iburst minpoll 4 maxpoll 4
+
+            # Use public servers from the pool.ntp.org project.
+            # Please consider joining the pool (http://www.pool.ntp.org/join.html).
+            # !!! [BEGIN] SOCA REQUIREMENT
+            # You will need to open UDP egress traffic on your security group if you want to enable public pool
+            #pool 2.amazon.pool.ntp.org iburst
+            # !!! [END] SOCA REQUIREMENT
+            # Record the rate at which the system clock gains/losses time.
+            driftfile /var/lib/chrony/drift
+
+            # Allow the system clock to be stepped in the first three updates
+            # if its offset is larger than 1 second.
+            makestep 1.0 3
+
+            # Specify file containing keys for NTP authentication.
+            keyfile /etc/chrony.keys
+
+            # Specify directory for log files.
+            logdir /var/log/chrony
+
+            # save data between restarts for fast re-load
+            dumponexit
+            dumpdir /var/run/chrony
+            """ > /etc/chrony.conf
+
+            systemctl enable chronyd
+            # Prepare Log folder
+            mkdir -p $SOCA_HOST_SYSTEM_LOG
+            echo "@reboot /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/custom/CustomNodePostReboot.sh >> $SOCA_HOST_SYSTEM_LOG/CustomNodePostReboot.log 2>&1" | crontab -
+            $AWS s3 cp s3://$SOCA_INSTALL_BUCKET/$SOCA_INSTALL_BUCKET_FOLDER/scripts/config.cfg /root
+
+            # Replace repository FQDN
+            sed -i "s/repository-fqdn/$REPOSITORY/g" /root/config.cfg
+
+            /bin/bash /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/custom/CustomNode.sh ${SchedulerPrivateDnsName} >> $SOCA_HOST_SYSTEM_LOG/CustomNode.log 2>&1
+
+Outputs:
+  InstanceId:
+    Value: !Ref EC2Host
+  PrivateIP:
+    Value: !GetAtt EC2Host.PrivateIp
+  PrivateDnsName:
+    Value: !GetAtt EC2Host.PrivateDnsName
