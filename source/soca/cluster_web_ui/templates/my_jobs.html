@@ -81,7 +81,6 @@
                                            <th>{{ job_data.Resource_List.ncpus }}</th>
                                            <th>{{ job_data.Resource_List.nodect }}</th>
                                            <th>
-                                               <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#job{{ job_id.split(".")[0] }}">Job Info</button>
                                                {% if job_data.job_state != 'E' %}
                                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#delete{{ job_id.split(".")[0] }}">Kill</button>
                                                {% endif %}
@@ -127,35 +126,6 @@
                                                                 <button type="button" class="btn btn-danger form-control">Delete job {{ job_id.split(".")[0] }}</button>
                                                             </a>
                                                       </div>
-                                                  </div>
-                                              </div>
-                                          </div>
-                                          <!-- End -->
-                                          <!-- Modal Info -->
-                                          <div class="modal fade" id="job{{ job_id.split(".")[0] }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                              <div class="modal-dialog modal-lg" role="document">
-                                                  <div class="modal-content modal-lg">
-                                                      <div class="modal-header">
-                                                          <h5 class="modal-title">Job {{ job_id.split(".")[0] }}</h5>
-                                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                              <span aria-hidden="true">&times;</span>
-                                                          </button>
-                                                      </div>
-                                                      <div class="modal-body container">
-                                                          {% for key, value in job_data.items() %}
-                                                              {% if key == "Variable_List" or key == "Resource_List" %}
-                                                                  <strong>{{ key }}</strong>:
-                                                                  {% for resource_name, resource_value in value.items() %}
-                                                                      <li style="margin-left: 30px"><strong>{{ resource_name }}:</strong> {{ resource_value }}</li>
-                                                                  {% endfor %}
-                                                              {% else %}
-                                                                  <strong>{{ key }}</strong>: {{ value }}<br>
-                                                              {% endif %}
-                                                          {% endfor %}
-                                                          </div>
-                                                          <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                          </div>
                                                   </div>
                                               </div>
                                           </div>
