@@ -249,6 +249,8 @@ Cluster: $SOCA_CONFIGURATION
 # Clean directories
 rm -rf /root/pbspro-18.1.4*
 rm -rf /root/*.sh
+
+cp /root/config.cfg /apps/soca/$SOCA_CONFIGURATION/cluster_node_bootstrap/
 rm -rf /root/config.cfg
 
 # Install OpenMPI
